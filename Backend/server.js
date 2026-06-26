@@ -11,6 +11,7 @@ import checkInRoutes from "./Routes/checkInRoutes.js";
 import http from "http";
 import {initSocket} from "./socket.js";
 import inngestRoutes from "./Routes/inngestRoutes.js";
+import soloCheckInRoutes from "./Routes/soloCheckInRoutes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -25,6 +26,7 @@ app.use("/api/inngest",inngestRoutes);
 app.get("/",(req,res)=>{
     res.send("PeerPush API Running");
 });
+app.use("/api/solo-checkins", soloCheckInRoutes);
 const server=http.createServer(app);
 initSocket(server);
 connectDB().then(

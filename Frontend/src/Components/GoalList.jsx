@@ -1,31 +1,21 @@
 import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
-function GoalList() {
+import {
+  Target,
+  Code2,
+  Dumbbell,
+  BookOpen,
+  Languages,
+  FolderKanban,
+  ShieldCheck,
+  Search,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+function GoalList({ goals }) {
   const { user } = useUser();
-
-  const [goals, setGoals] = useState([]);
   const [joiningGoal, setJoiningGoal] = useState(null);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchGoals = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/goals/my/${user.id}`
-        );
-
-        setGoals(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchGoals();
-  }, [user]);
-
+  const navigate = useNavigate();
   const joinQueue = async (goalId) => {
     try {
       setJoiningGoal(goalId);
@@ -46,20 +36,25 @@ function GoalList() {
     }
   };
 
-  const getCategoryEmoji = (category) => {
+  const getCategoryIcon = (category) => {
     switch (category) {
       case "Coding":
-        return "🧩";
+        return <Code2 className="w-6 h-6 text-warning" />;
+
       case "Fitness":
-        return "💪";
+        return <Dumbbell className="w-6 h-6 text-warning" />;
+
       case "Reading":
-        return "📚";
+        return <BookOpen className="w-6 h-6 text-warning" />;
+
       case "Language":
-        return "🌎";
+        return <Languages className="w-6 h-6 text-warning" />;
+
       case "Project":
-        return "🚀";
+        return <FolderKanban className="w-6 h-6 text-warning" />;
+
       default:
-        return "🎯";
+        return <Target className="w-6 h-6 text-warning" />;
     }
   };
 
@@ -82,8 +77,8 @@ function GoalList() {
 
         {goals.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-base-300 bg-base-200/30 p-12 text-center">
-            <div className="text-6xl mb-4">
-              🎯
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-warning/20 bg-warning/10">
+              <Target className="h-10 w-10 text-warning" />
             </div>
 
             <h3 className="text-2xl font-bold">
@@ -99,7 +94,8 @@ function GoalList() {
             {goals.map((goal) => (
               <div
                 key={goal._id}
-                className="group relative overflow-hidden rounded-[28px] border border-base-300 bg-base-200/50 backdrop-blur-xl transition-all duration-300 hover:border-warning/30 hover:-translate-y-1"
+                onClick={() => navigate(`/missions/${goal._id}`)}
+                className="group cursor-pointer relative overflow-hidden rounded-[28px] border border-base-300 bg-base-200/50 backdrop-blur-xl transition-all duration-300 hover:border-warning/30 hover:-translate-y-1"
               >
                 {/* glow */}
                 <div className="absolute top-0 right-0 h-40 w-40 bg-warning/5 opacity-0 blur-3xl transition-all duration-300 group-hover:opacity-100" />
@@ -107,8 +103,8 @@ function GoalList() {
                 <div className="relative p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center text-2xl">
-                        {getCategoryEmoji(goal.category)}
+                      <div className="w-14 h-14 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center">
+                        {getCategoryIcon(goal.category)}
                       </div>
 
                       <div>
@@ -123,11 +119,10 @@ function GoalList() {
                     </div>
 
                     <div
-                      className={`badge ${
-                        goal.status === "active"
-                          ? "badge-success"
-                          : "badge-outline"
-                      }`}
+                      className={`badge ${goal.status === "active"
+                        ? "badge-success"
+                        : "badge-outline"
+                        }`}
                     >
                       {goal.status}
                     </div>
@@ -151,9 +146,12 @@ function GoalList() {
                     </div>
 
                     <button
-                      onClick={() => joinQueue(goal._id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        joinQueue(goal._id);
+                      }}
                       disabled={joiningGoal === goal._id}
-                      className="btn btn-warning"
+                      className="btn btn-warning gap-2"
                     >
                       {joiningGoal === goal._id ? (
                         <>
@@ -161,7 +159,10 @@ function GoalList() {
                           Joining...
                         </>
                       ) : (
-                        <>🔥 Enter Matchmaking</>
+                        <>
+                          <Search className="w-4 h-4" />
+                          Enter Matchmaking
+                        </>
                       )}
                     </button>
                   </div>
@@ -174,8 +175,8 @@ function GoalList() {
 
       <dialog id="queue_modal" className="modal">
         <div className="modal-box">
-          <div className="text-5xl mb-4">
-            🤝
+          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-warning/20 bg-warning/10">
+            <ShieldCheck className="h-10 w-10 text-warning" />
           </div>
 
           <h3 className="font-bold text-2xl">

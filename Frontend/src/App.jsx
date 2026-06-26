@@ -9,6 +9,12 @@ import axios from "axios";
 import Dashboard from "./Pages/Dashboard";
 import pfp1 from "../src/assets/pfp1.png";
 import pfp2 from "../src/assets/pfp2.webp";
+import { Routes, Route } from "react-router-dom";
+import SoloPage from "./Pages/SoloPage";
+import PartnerPage from "./Pages/PartnerPage";
+import Missions from "./Pages/Missions";
+import MissionPage from "./Pages/MissionPage";
+import History from "./Pages/History";
 function App() {
   const { user, isLoaded } = useUser();
 
@@ -90,89 +96,89 @@ function App() {
                 </div>
 
                 {/* Right */}
-<div>
-  <div className="rounded-[36px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
+                <div>
+                  <div className="rounded-[36px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
 
-    <div className="text-center">
-      <p className="text-xs tracking-[0.4em] opacity-50 mb-4">
-        SHARED ACCOUNTABILITY
-      </p>
+                    <div className="text-center">
+                      <p className="text-xs tracking-[0.4em] opacity-50 mb-4">
+                        SHARED ACCOUNTABILITY
+                      </p>
 
-      <h2 className="text-5xl font-black tracking-tight">
-        Two People.
-      </h2>
+                      <h2 className="text-5xl font-black tracking-tight">
+                        Two People.
+                      </h2>
 
-      <h2 className="text-5xl font-black tracking-tight text-warning">
-        One Streak.
-      </h2>
+                      <h2 className="text-5xl font-black tracking-tight text-warning">
+                        One Streak.
+                      </h2>
 
-      <p className="mt-4 text-base-content/60 max-w-md mx-auto">
-        Every day both partners submit proof of progress.
-        Miss a day and the shared streak resets.
-      </p>
-    </div>
+                      <p className="mt-4 text-base-content/60 max-w-md mx-auto">
+                        Every day both partners submit proof of progress.
+                        Miss a day and the shared streak resets.
+                      </p>
+                    </div>
 
-    <div className="divider my-8" />
+                    <div className="divider my-8" />
 
-    <div className="flex items-center justify-center gap-10">
+                    <div className="flex items-center justify-center gap-10">
 
-      {/* User */}
-      <div className="text-center">
-        <div className="avatar placeholder">
-          <div className="w-20 rounded-3xl bg-base-300 text-base-content">
-            <img src={pfp1} alt="" />
-          </div>
-        </div>
+                      {/* User */}
+                      <div className="text-center">
+                        <div className="avatar placeholder">
+                          <div className="w-20 rounded-3xl bg-base-300 text-base-content">
+                            <img src={pfp1} alt="" />
+                          </div>
+                        </div>
 
-        <p className="mt-3 text-sm tracking-wider opacity-70">
-          YOU
-        </p>
+                        <p className="mt-3 text-sm tracking-wider opacity-70">
+                          YOU
+                        </p>
 
-        <div className="mt-2 badge badge-success badge-outline">
-          CHECKED IN
-        </div>
-      </div>
+                        <div className="mt-2 badge badge-success badge-outline">
+                          CHECKED IN
+                        </div>
+                      </div>
 
-      {/* Connection */}
-      <div className="flex flex-col items-center">
-        <div className="w-24 h-px bg-gradient-to-r from-warning to-primary" />
+                      {/* Connection */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-24 h-px bg-gradient-to-r from-warning to-primary" />
 
-        <div className="mt-3 text-4xl font-black text-warning">
-          17
-        </div>
+                        <div className="mt-3 text-4xl font-black text-warning">
+                          17
+                        </div>
 
-        <div className="text-xs tracking-[0.3em] opacity-50">
-          DAYS
-        </div>
-      </div>
+                        <div className="text-xs tracking-[0.3em] opacity-50">
+                          DAYS
+                        </div>
+                      </div>
 
-      {/* Partner */}
-      <div className="text-center">
-        <div className="avatar placeholder">
-          <div className="w-20 rounded-3xl bg-base-300 text-base-content">
-            <img src={pfp2} alt="" />
-          </div>
-        </div>
+                      {/* Partner */}
+                      <div className="text-center">
+                        <div className="avatar placeholder">
+                          <div className="w-20 rounded-3xl bg-base-300 text-base-content">
+                            <img src={pfp2} alt="" />
+                          </div>
+                        </div>
 
-        <p className="mt-3 text-sm tracking-wider opacity-70">
-          PARTNER
-        </p>
+                        <p className="mt-3 text-sm tracking-wider opacity-70">
+                          PARTNER
+                        </p>
 
-        <div className="mt-2 badge badge-success badge-outline">
-          CHECKED IN
-        </div>
-      </div>
+                        <div className="mt-2 badge badge-success badge-outline">
+                          CHECKED IN
+                        </div>
+                      </div>
 
-    </div>
+                    </div>
 
-    <div className="mt-8 rounded-2xl border border-warning/20 bg-warning/5 p-4">
-      <p className="text-center text-sm">
-        Shared streaks only survive when both people show up.
-      </p>
-    </div>
+                    <div className="mt-8 rounded-2xl border border-warning/20 bg-warning/5 p-4">
+                      <p className="text-center text-sm">
+                        Shared streaks only survive when both people show up.
+                      </p>
+                    </div>
 
-  </div>
-</div>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -221,7 +227,12 @@ function App() {
       </SignedOut>
 
       <SignedIn>
-        <Dashboard />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/missions" element={<Missions />} />
+          <Route path="/missions/:id" element={<MissionPage />} />
+          <Route path="/history" element={<History />} />
+        </Routes>
       </SignedIn>
     </>
   );

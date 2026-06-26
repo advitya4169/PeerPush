@@ -32,3 +32,23 @@ export const getMyGoals = async(req,res)=>{
         res.status(500).json({"message":error.message});
     }
 }
+
+export const getGoalById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const goal = await Goal.findById(id);
+
+    if (!goal) {
+      return res.status(404).json({
+        message: "Mission not found",
+      });
+    }
+
+    res.status(200).json(goal);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};

@@ -11,32 +11,35 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
-function CreateGoal() {
+function CreateGoal({ goals, setGoals, setGoalCount }) {
   const { user } = useUser();
 
   const [category, setCategory] = useState("Coding");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      await axios.post("http://localhost:5000/api/goals", {
-        clerkId: user.id,
-        category,
-        title,
-        description,
-      });
+  try {
+    const res = await axios.post("http://localhost:5000/api/goals", {
+      clerkId: user.id,
+      category,
+      title,
+      description,
+    });
 
-      setTitle("");
-      setDescription("");
+    setGoals((prev) => [res.data, ...prev]);
+    setGoalCount((prev) => prev + 1);
 
-      document.getElementById("goal_success_modal")?.showModal();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    setTitle("");
+    setDescription("");
+
+    document.getElementById("goal_success_modal")?.showModal();
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   const categories = [
     { name: "Coding", icon: Code2 },

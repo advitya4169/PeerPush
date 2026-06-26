@@ -5,6 +5,7 @@ import CreateGoal from "../Components/CreateGoal";
 import GoalList from "../Components/GoalList";
 import PairDashboard from "../Components/PairDashboard";
 import Navbar from "../Components/Navbar";
+
 import {
   Target,
   Handshake,
@@ -17,6 +18,8 @@ import {
 } from "lucide-react";
 
 function Dashboard() {
+  const [goalCount, setGoalCount] = useState(0);
+  const [goals, setGoals] = useState([]);
   const { user } = useUser();
 
   const [mongoUser, setMongoUser] = useState(null);
@@ -29,8 +32,13 @@ function Dashboard() {
         const res = await axios.get(
           `http://localhost:5000/api/users/me/${user.id}`
         );
-
         setMongoUser(res.data);
+        const goalsRes = await axios.get(
+          `http://localhost:5000/api/goals/my/${user.id}`
+        );
+
+        setGoals(goalsRes.data);
+        setGoalCount(goalsRes.data.length);
       } catch (error) {
         console.log(error);
       }
@@ -47,8 +55,6 @@ function Dashboard() {
     );
   }
 
-  if (mongoUser.currentPairId)
-    return <PairDashboard mongoUser={mongoUser} />;
 
   const steps = [
     {
@@ -76,10 +82,16 @@ function Dashboard() {
       desc: "Miss once and both lose the streak.",
     },
   ];
+  const soloGoals = goals.filter(
+    (goal) => goal.mode === "solo"
+  );
 
+  const partnerGoals = goals.filter(
+    (goal) => goal.mode === "partner"
+  );
   return (
     <div className="min-h-screen bg-base-100 text-base-content overflow-hidden">
-      <Navbar/>
+      <Navbar />
       {/* Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-warning/10 blur-[140px]" />
@@ -91,69 +103,78 @@ function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-10">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-[32px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-8 md:p-12 mb-8">
+        <section className="relative overflow-hidden rounded-[32px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-8 md:p-10 mb-8">
           <div className="absolute -top-16 right-0 h-72 w-72 rounded-full bg-warning/10 blur-[120px]" />
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div>
-              <div className="badge badge-warning badge-outline mb-4">
-                MISSION STAGING AREA
-              </div>
-
-              <h1 className="text-5xl md:text-6xl font-black tracking-tight">
-                {mongoUser.username}
-              </h1>
-
-              <p className="text-base-content/70 mt-5 text-lg max-w-2xl">
-                You're not paired yet. Build your mission, enter matchmaking,
-                and find someone who refuses to let you disappear tomorrow.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mt-6">
-                <div className="badge badge-lg badge-outline">
-                  SOLO MODE
-                </div>
-
-                <div className="badge badge-lg badge-warning">
-                  PARTNER REQUIRED
-                </div>
-
-                
-
-                {mongoUser.isInQueue && (
-                  <div className="badge badge-lg badge-success">
-                    MATCHMAKING ACTIVE
-                  </div>
-                )}
-              </div>
+          <div className="relative">
+            <div className="badge badge-warning badge-outline mb-6">
+              MISSION CONTROL
             </div>
 
-            <div className="text-center lg:text-right">
-              <p className="text-xs uppercase tracking-[0.3em] text-base-content/50">
-                Status
-              </p>
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              {/* Left */}
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+                  Build streaks that survive bad days.
+                </h1>
 
-              <div className="flex justify-end mt-2">
-                <Radar className="w-16 h-16 text-warning" strokeWidth={1.5} />
+                <p className="text-base-content/70 mt-5 text-lg max-w-2xl">
+                  Track missions independently or pair with someone who shares the
+                  consequences. Every check-in protects a streak.
+                </p>
+
+
               </div>
 
-              <p className="text-warning font-semibold mt-3">
-                Ready For Matchmaking
-              </p>
+              {/* Right */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-3xl border border-base-300 bg-base-300/20 p-6">
+                  <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+                    Missions
+                  </p>
+
+                  <p className="text-4xl font-black mt-2">
+                    {goalCount}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-base-300 bg-base-300/20 p-6">
+                  <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+                    Status
+                  </p>
+
+                  <p className="text-lg font-semibold text-warning mt-3">
+                    {mongoUser.isInQueue
+                      ? "Searching"
+                      : "Ready"}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-base-300 bg-base-300/20 p-6">
+                  <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+                    Solo Missions
+                  </p>
+
+                  <p className="text-4xl font-black mt-2">
+                    {soloGoals.length}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-base-300 bg-base-300/20 p-6">
+                  <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+                    Partner Missions
+                  </p>
+
+                  <p className="text-4xl font-black mt-2">
+                    {partnerGoals.length}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Next Action Alert */}
-        <div className="alert border border-warning/20 bg-warning/5 mb-8">
-          <span className="text-warning font-medium">
-            No accountability partner assigned.
-          </span>
 
-          <span className="text-base-content/70">
-            Create at least one goal and join matchmaking to form a pact.
-          </span>
-        </div>
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6 mb-10">
@@ -208,7 +229,7 @@ function Dashboard() {
             <div className="absolute top-0 right-0 h-40 w-40 bg-warning/10 blur-3xl" />
 
             <p className="text-xs uppercase tracking-[0.3em] text-base-content/50">
-              Future Pact
+              Partner Mode
             </p>
 
             <h2 className="text-3xl font-bold mt-2">
@@ -304,11 +325,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Goal Area */}
-        <div className="space-y-10">
-          <CreateGoal />
-          <GoalList />
-        </div>
       </div>
     </div>
   );

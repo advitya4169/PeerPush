@@ -1,9 +1,10 @@
 import { SignOutButton } from "@clerk/clerk-react";
 import { LogOut, Users, User } from "lucide-react";
-
+import { useLocation, useNavigate } from "react-router-dom";
 function Navbar() {
   const mode = "partner"; // replace with state later
-
+  const navigate = useNavigate();
+  const location = useLocation();
   return (
     <nav className="sticky top-0 z-50 border-b border-base-300/50 bg-base-100/70 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -21,27 +22,35 @@ function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-4">
           {/* Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-base-200 border border-base-300">
+          <div className="flex items-center gap-2">
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                mode === "solo"
-                  ? "bg-base-100 shadow-sm"
-                  : "text-base-content/60 hover:text-base-content"
-              }`}
+              onClick={() => navigate("/")}
+              className={`btn btn-sm ${location.pathname === "/"
+                  ? "btn-warning"
+                  : "btn-ghost"
+                }`}
             >
-              <User className="w-4 h-4" />
-              Solo
+              Dashboard
             </button>
 
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                mode === "partner"
-                  ? "bg-warning text-warning-content shadow-sm"
-                  : "text-base-content/60 hover:text-base-content"
-              }`}
+              onClick={() => navigate("/missions")}
+              className={`btn btn-sm ${location.pathname.startsWith("/missions")
+                  ? "btn-warning"
+                  : "btn-ghost"
+                }`}
             >
-              <Users className="w-4 h-4" />
-              Partner
+              Missions
+            </button>
+
+            <button
+              onClick={() => navigate("/history")}
+              className={`btn btn-sm ${location.pathname === "/history"
+                  ? "btn-warning"
+                  : "btn-ghost"
+                }`}
+            >
+              History
             </button>
           </div>
 
