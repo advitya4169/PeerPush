@@ -1,8 +1,111 @@
 import { ArrowLeft, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-function SoloMissionDashboard({ mission }) {
+import { useState } from "react";
+import { useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { useEffect } from "react";
+import { uploadImage } from "../Utils/uploadImage.js";
+import MissionHeader from "./MissionHeader.jsx";
+import MissionStats from "./MissionStats.jsx";
+import MissionProgress from "./MissionProgress.jsx";
+import MissionActivity from "./MissionActivity.jsx";
+import MissionStatistics from "./MissionStatistics.jsx";
+import MissionCheckIn from "./MissionCheckIn.jsx";
+function SoloMissionDashboard({ mission: initialMission }) {
+    const [image, setImage] = useState(null);
+    const [preview, setPreview] = useState("");
+    const { user } = useUser();
+    const [proofType, setProofType] = useState("text");
+    const [content, setContent] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [checkIns, setCheckIns] = useState([]);
+    const [checkedInToday, setCheckedInToday] = useState(false);
+    const [mission, setMission] = useState(initialMission);
+    const fetchCheckIns = async () => {
+        try {
+            const res = await axios.get(
+                `http://localhost:5000/api/solo-checkins/${mission._id}`
+            );
+
+            setCheckIns(res.data);
+
+            const today = new Date().toISOString().split("T")[0];
+
+            const todaysCheckIn = res.data.find((checkIn) => {
+                return (
+                    new Date(checkIn.date).toISOString().split("T")[0] === today
+                );
+            });
+
+            setCheckedInToday(!!todaysCheckIn);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    const handleSubmit = async () => {
+        if (proofType === "text" || proofType === "link") {
+            if (!content.trim()) return;
+        }
+
+        if (proofType === "image" && !image) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            let finalContent = content;
+
+            if (proofType === "image") {
+                if (!image) {
+                    alert("Please select an image.");
+                    setLoading(false);
+                    return;
+                }
+
+                finalContent = await uploadImage(image);
+            }
+            const res = await axios.post(
+                "http://localhost:5000/api/solo-checkins",
+                {
+                    clerkId: user.id,
+                    goalId: mission._id,
+                    proofType,
+                    content: finalContent,
+                }
+            );
+
+
+            setContent("");
+            setImage(null);
+            setPreview("");
+            setMission(res.data.goal);
+            await fetchCheckIns();
+        } catch (error) {
+            alert(
+                error.response?.data?.message ||
+                "Something went wrong."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchCheckIns();
+    }, []);
+    const updateStatus = async (status) => {
+        try {
+            await axios.patch(
+                `http://localhost:5000/api/goals/${mission._id}/status`,
+                { status }
+            );
+
+            navigate("/missions");
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    const progress = mission.targetCheckIns > 0 ? (mission.completedCheckIns / mission.targetCheckIns) * 100 : 0;
     return (
         <div className="max-w-7xl mx-auto px-6 py-10">
 
@@ -16,115 +119,16 @@ function SoloMissionDashboard({ mission }) {
             </button>
 
             {/* Mission Header */}
-            <div className="rounded-[32px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
-
-                <div className="flex items-start justify-between gap-6">
-
-                    <div>
-                        <div className="badge badge-warning badge-outline mb-4">
-                            ACTIVE MISSION
-                        </div>
-
-                        <h1 className="text-5xl font-black tracking-tight">
-                            {mission.title}
-                        </h1>
-
-                        <p className="mt-4 text-lg text-base-content/60 max-w-2xl">
-                            {mission.description}
-                        </p>
-
-                        <div className="flex flex-wrap gap-3 mt-6">
-
-                            <div className="badge badge-outline">
-                                {mission.category}
-                            </div>
-
-                            <div className="badge badge-primary">
-                                Solo Mission
-                            </div>
-
-                            <div
-                                className={`badge ${mission.status === "active"
-                                    ? "badge-success"
-                                    : mission.status === "searching"
-                                        ? "badge-warning"
-                                        : "badge-outline"
-                                    }`}
-                            >
-                                {mission.status}
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div className="hidden lg:flex h-24 w-24 rounded-3xl bg-warning/10 border border-warning/20 items-center justify-center">
-                        <Target className="w-12 h-12 text-warning" />
-                    </div>
-
-                </div>
-            </div>
+            <MissionHeader
+                mission={mission}
+                missionType="Solo Mission"
+            />
             {/* Mission Stats */}
-            <div className="grid md:grid-cols-3 gap-5 mt-8">
-
-                {/* Current Streak */}
-                <div className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-6 transition-all hover:border-warning/30">
-
-                    <p className="text-xs uppercase tracking-[0.25em] text-base-content/50">
-                        Current Streak
-                    </p>
-
-                    <h2 className="text-5xl font-black mt-4">
-                        {mission.currentStreak}
-                    </h2>
-
-                    <p className="text-base-content/60 mt-2">
-                        Consecutive days
-                    </p>
-
-                </div>
-
-                {/* Longest */}
-                <div className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-6 transition-all hover:border-warning/30">
-
-                    <p className="text-xs uppercase tracking-[0.25em] text-base-content/50">
-                        Longest Streak
-                    </p>
-
-                    <h2 className="text-5xl font-black mt-4">
-                        {mission.longestStreak}
-                    </h2>
-
-                    <p className="text-base-content/60 mt-2">
-                        Personal best
-                    </p>
-
-                </div>
-
-                {/* Status */}
-                <div className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-6 transition-all hover:border-warning/30">
-
-                    <p className="text-xs uppercase tracking-[0.25em] text-base-content/50">
-                        Today's Status
-                    </p>
-
-                    <h2
-                        className={`text-2xl font-bold mt-5 ${mission.status === "active"
-                            ? "text-success"
-                            : mission.status === "searching"
-                                ? "text-warning"
-                                : "text-base-content"
-                            }`}
-                    >
-                        Pending
-                    </h2>
-
-                    <p className="text-base-content/60 mt-2">
-                        Waiting for today's check-in
-                    </p>
-
-                </div>
-
-            </div>
+            <MissionStats
+                currentStreak={mission.currentStreak}
+                longestStreak={mission.longestStreak}
+                checkedInToday={checkedInToday}
+            />
             {/* Today's Mission */}
             <section className="mt-8 rounded-[32px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-8">
 
@@ -136,7 +140,7 @@ function SoloMissionDashboard({ mission }) {
                         </div>
 
                         <h2 className="text-3xl font-black">
-                            Stay consistent.
+                            {mission.title}
                         </h2>
 
                         <p className="mt-3 text-base-content/60">
@@ -144,39 +148,19 @@ function SoloMissionDashboard({ mission }) {
                         </p>
                     </div>
 
-                    <div className="hidden lg:flex h-16 w-16 rounded-2xl bg-warning/10 border border-warning/20 items-center justify-center">
-                        <Target className="w-8 h-8 text-warning" />
-                    </div>
-
                 </div>
 
                 <div className="divider my-8"></div>
 
-                <div className="space-y-4">
+                <div className="rounded-3xl border border-warning/20 bg-warning/5 p-6">
 
-                    <div className="flex items-center gap-4 rounded-2xl border border-base-300 bg-base-300/20 p-5">
-                        <div className="w-3 h-3 rounded-full bg-warning"></div>
+                    <p className="text-xs uppercase tracking-[0.25em] text-warning mb-4">
+                        DAILY TARGET
+                    </p>
 
-                        <p className="font-medium">
-                            Complete today's planned work.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 rounded-2xl border border-base-300 bg-base-300/20 p-5">
-                        <div className="w-3 h-3 rounded-full bg-warning"></div>
-
-                        <p className="font-medium">
-                            Prepare proof of your progress.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 rounded-2xl border border-base-300 bg-base-300/20 p-5">
-                        <div className="w-3 h-3 rounded-full bg-warning"></div>
-
-                        <p className="font-medium">
-                            Submit today's check-in before the day ends.
-                        </p>
-                    </div>
+                    <p className="text-2xl font-semibold leading-relaxed">
+                        {mission.dailyTarget}
+                    </p>
 
                 </div>
 
@@ -205,196 +189,63 @@ function SoloMissionDashboard({ mission }) {
 
                 <div className="divider my-8"></div>
 
-                {/* Proof Type */}
-                <div>
-
-                    <label className="font-semibold">
-                        Proof Type
-                    </label>
-
-                    <div className="flex gap-3 mt-4">
-
-                        <button className="btn btn-warning btn-sm">
-                            Text
-                        </button>
-
-                        <button className="btn btn-outline btn-sm">
-                            Link
-                        </button>
-
-                        <button className="btn btn-outline btn-sm">
-                            Image
-                        </button>
-
-                    </div>
-
-                </div>
-
-                {/* Text Area */}
-
-                <textarea
-                    className="textarea textarea-bordered w-full h-40 mt-6 rounded-2xl"
-                    placeholder="Describe what you accomplished today..."
+                <MissionCheckIn
+                    mission={mission}
+                    checkedInToday={checkedInToday}
+                    onSuccess={async () => {
+                        await fetchMission();
+                        await fetchCheckIns();
+                    }}
                 />
-
-                <div className="flex justify-end mt-6">
-
-                    <button className="btn btn-warning btn-wide">
-                        Submit Check-in
-                    </button>
-
-                </div>
 
             </section>
 
             {/* Mission Progress */}
-            <section className="mt-8 rounded-[32px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
-
-                <div className="flex items-center justify-between">
-
-                    <div>
-                        <div className="badge badge-outline mb-4">
-                            PROGRESS
-                        </div>
-
-                        <h2 className="text-3xl font-black">
-                            Mission Progress
-                        </h2>
-                    </div>
-
-                    <div className="text-right">
-
-                        <p className="text-5xl font-black">
-                            63%
-                        </p>
-
-                        <p className="text-base-content/60">
-                            Completion
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <progress
-                    className="progress progress-warning w-full mt-8 h-4"
-                    value="63"
-                    max="100"
-                />
-
-                <p className="mt-4 text-base-content/60">
-                    23 of 36 planned check-ins completed.
-                </p>
-
-            </section>
+            <MissionProgress
+                completedCheckIns={mission.completedCheckIns}
+                targetCheckIns={mission.targetCheckIns}
+            />
 
             {/* Bottom Grid */}
             <div className="grid lg:grid-cols-2 gap-8 mt-8">
 
                 {/* Activity */}
 
-                <section className="rounded-[32px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
-
-                    <div className="badge badge-outline mb-4">
-                        ACTIVITY
-                    </div>
-
-                    <h2 className="text-2xl font-bold mb-8">
-                        Recent Check-ins
-                    </h2>
-
-                    <div className="space-y-6">
-
-                        <div>
-                            <p className="text-sm opacity-50">
-                                Today
-                            </p>
-
-                            <p className="font-medium mt-1">
-                                Solved LC 560
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm opacity-50">
-                                Yesterday
-                            </p>
-
-                            <p className="font-medium mt-1">
-                                Revised Sliding Window
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm opacity-50">
-                                2 Days Ago
-                            </p>
-
-                            <p className="font-medium mt-1">
-                                Built Navbar
-                            </p>
-                        </div>
-
-                    </div>
-
-                </section>
+                <MissionActivity checkIns={checkIns} />
 
                 {/* Statistics */}
 
-                <section className="rounded-[32px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
+                <MissionStatistics mission={mission} />
 
-                    <div className="badge badge-outline mb-4">
-                        STATISTICS
-                    </div>
+                <section className="mt-8 rounded-[32px] border border-error/20 bg-base-200/40 backdrop-blur-xl p-8">
 
-                    <h2 className="text-2xl font-bold mb-8">
-                        Mission Statistics
-                    </h2>
+                    <div className="flex items-center justify-between">
 
-                    <div className="space-y-6">
+                        <div>
+                            <div className="badge badge-outline mb-3">
+                                MISSION ACTIONS
+                            </div>
 
-                        <div className="flex justify-between">
-                            <span className="opacity-60">Created</span>
-                            <span>Apr 12, 2026</span>
+                            <h2 className="text-2xl font-bold">
+                                Finish this mission
+                            </h2>
+
+                            <p className="mt-2 text-base-content/60">
+                                Complete the mission when you've achieved your goal,
+                                or abandon it if you've decided to stop.
+                            </p>
                         </div>
 
-                        <div className="flex justify-between">
-                            <span className="opacity-60">Current Streak</span>
-                            <span>{mission.currentStreak ?? 0} Days</span>
+                        <div className="flex gap-4">
+
+                            <button
+                                onClick={() => updateStatus("failed")}
+                                className="btn btn-error btn-outline"
+                            >
+                                Abandon Mission
+                            </button>
+
                         </div>
-
-                        <div className="flex justify-between">
-                            <span className="opacity-60">Longest Streak</span>
-                            <span>{mission.longestStreak ?? 0} Days</span>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <span className="opacity-60">Total Check-ins</span>
-                            <span>31</span>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <span className="opacity-60">Success Rate</span>
-                            <span>86%</span>
-                        </div>
-
-                    </div>
-
-                    <div className="divider my-8"></div>
-
-                    <div className="rounded-2xl bg-warning/10 border border-warning/20 p-5">
-
-                        <p className="text-warning font-semibold">
-                            Consistency
-                        </p>
-
-                        <p className="mt-2 text-base-content/70">
-                            You've checked in for{" "}
-                            <span className="font-bold">
-                                {mission.currentStreak ?? 0} consecutive days
-                            </span>.
-                            Keep the streak alive.
-                        </p>
 
                     </div>
 
@@ -402,6 +253,7 @@ function SoloMissionDashboard({ mission }) {
 
             </div>
         </div>
+
     );
 }
 

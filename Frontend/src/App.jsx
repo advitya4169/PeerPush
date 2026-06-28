@@ -14,7 +14,7 @@ import SoloPage from "./Pages/SoloPage";
 import PartnerPage from "./Pages/PartnerPage";
 import Missions from "./Pages/Missions";
 import MissionPage from "./Pages/MissionPage";
-import History from "./Pages/History";
+import HistoryPage from "./Pages/HistoryPage";
 function App() {
   const { user, isLoaded } = useUser();
 
@@ -231,7 +231,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/missions" element={<Missions />} />
           <Route path="/missions/:id" element={<MissionPage />} />
-          <Route path="/history" element={<History />} />
+          <Route path="/history" element={<HistoryPage />} />
         </Routes>
       </SignedIn>
     </>

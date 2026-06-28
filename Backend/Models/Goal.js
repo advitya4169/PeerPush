@@ -32,7 +32,11 @@ const goalSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+    dailyTarget: {
+      type: String,
+      required: true,
+      trim: true,
+},
     mode: {
       type: String,
       enum: ["solo", "partner"],
@@ -41,7 +45,7 @@ const goalSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "searching", "completed", "failed"],
+      enum: ["active", "searching", "completed", "abandoned"],
       default: "active",
     },
 
@@ -60,7 +64,24 @@ const goalSchema = new mongoose.Schema(
       ref: "Pair",
       default: null,
     },
+
+    lastCheckInDate: {
+      type: Date,
+      default: null,
+    },
+    
+    targetCheckIns: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    completedCheckIns: {
+      type: Number,
+      default: 0,
+    },
   },
+  
   { timestamps: true }
 );
 

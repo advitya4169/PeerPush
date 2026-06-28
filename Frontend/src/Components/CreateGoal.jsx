@@ -12,34 +12,36 @@ import {
   CheckCircle2,
 } from "lucide-react";
 function CreateGoal({ goals, setGoals, setGoalCount }) {
+  const [targetCheckIns, setTargetCheckIns] = useState(30);
   const { user } = useUser();
-
   const [category, setCategory] = useState("Coding");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dailyTarget, setDailyTarget] = useState("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:5000/api/goals", {
+        clerkId: user.id,
+        category,
+        title,
+        description,
+        dailyTarget,
+        targetCheckIns,
+      });
 
-  try {
-    const res = await axios.post("http://localhost:5000/api/goals", {
-      clerkId: user.id,
-      category,
-      title,
-      description,
-    });
+      setGoals((prev) => [res.data, ...prev]);
+      setGoalCount((prev) => prev + 1);
 
-    setGoals((prev) => [res.data, ...prev]);
-    setGoalCount((prev) => prev + 1);
-
-    setTitle("");
-    setDescription("");
-
-    document.getElementById("goal_success_modal")?.showModal();
-  } catch (error) {
-    console.log(error);
-  }
-};
+      setTitle("");
+      setDescription("");
+      setDailyTarget("");
+      document.getElementById("goal_success_modal")?.showModal();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const categories = [
     { name: "Coding", icon: Code2 },
@@ -113,7 +115,7 @@ const handleSubmit = async (e) => {
                 placeholder="Crack Binary Trees"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="input input-bordered w-full h-14 text-lg bg-base-300/20"
+                className="input input-bordered w-full h-14 text-lg bg-base-300/20 focus:outline-none"
                 required
               />
             </div>
@@ -131,11 +133,41 @@ const handleSubmit = async (e) => {
                 placeholder="Solve 3-5 tree problems every day and maintain consistency for 60 days..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="textarea textarea-bordered w-full bg-base-300/20"
+                className="textarea textarea-bordered w-full bg-base-300/20 focus:outline-none"
                 required
               />
             </div>
+              <div>
+              <label className="label">
+                <span className="label-text text-base-content/70">
+                  Daily Target
+                </span>
+              </label>
 
+              <textarea
+                className="textarea textarea-bordered w-full bg-base-300/20 focus:outline-none"
+                placeholder="e.g. Solve 2 LeetCode problems every day"
+                value={dailyTarget}
+                onChange={(e) => setDailyTarget(e.target.value)}
+              />
+              </div>
+              <div>
+              <label className="label">
+                <span className="label-text font-medium">
+                  Target Check-ins &nbsp;
+                </span>
+              </label>
+
+              <input
+                type="number"
+                min="1"
+                className="input input-bordered focus:outline-none"
+                value={targetCheckIns}
+                onChange={(e) =>
+                  setTargetCheckIns(Number(e.target.value))
+                }
+              />
+              </div>
             {/* Footer */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
               <div className="text-sm text-base-content/50">

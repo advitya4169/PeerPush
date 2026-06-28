@@ -3,6 +3,7 @@ import Goal from "../Models/Goal.js";
 import User from "../Models/User.js";
 
 export const createSoloCheckIn = async (req, res) => {
+  console.log("createSoloCheckIn called");
   try {
     const { clerkId, goalId, proofType, content } = req.body;
 
@@ -22,7 +23,7 @@ export const createSoloCheckIn = async (req, res) => {
       });
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    let today = new Date().toISOString().split("T")[0];
 
     const existingCheckIn = await SoloCheckIn.findOne({
       goalId,
@@ -47,13 +48,46 @@ export const createSoloCheckIn = async (req, res) => {
     });
 
     // Update streak
+     today = new Date();
+today.setHours(0, 0, 0, 0);
+
+if (!goal.lastCheckInDate) {
+  // First ever check-in
+  goal.currentStreak = 1;
+} else {
+  const last = new Date(goal.lastCheckInDate);
+  last.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (today - last) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays === 1) {
+    // Continued streak
     goal.currentStreak += 1;
+  } else if (diffDays > 1) {
+    // Streak broken
+    goal.currentStreak = 1;
+  }
+  // diffDays === 0 cannot happen because duplicate check-ins are prevented
+}
 
-    if (goal.currentStreak > goal.longestStreak) {
-      goal.longestStreak = goal.currentStreak;
-    }
+goal.lastCheckInDate = today;
 
-    await goal.save();
+goal.longestStreak = Math.max(
+  goal.longestStreak,
+  goal.currentStreak
+);
+
+// NEW
+goal.completedCheckIns += 1;
+
+// Auto-complete mission
+if (goal.completedCheckIns >= goal.targetCheckIns) {
+  goal.status = "completed";
+}
+
+await goal.save();
 
     const populatedCheckIn = await SoloCheckIn.findById(checkIn._id)
       .populate("userId");
