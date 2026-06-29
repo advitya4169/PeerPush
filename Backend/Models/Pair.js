@@ -52,7 +52,18 @@ const pairSchema = new mongoose.Schema({
     lastFreezeReset:{
         type:Date,
         default:Date.now()
-    }
+    },
+    goal1Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Goal",
+        required: true,
+    },
+
+    goal2Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Goal",
+        required: true,
+    },
 
 },{timestamps:true});
 

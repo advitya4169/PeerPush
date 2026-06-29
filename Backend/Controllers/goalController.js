@@ -3,7 +3,7 @@ import User from "../Models/User.js";
 
 export const createGoal = async(req,res)=>{
     try{
-        const { clerkId, category, title, description, dailyTarget,targetCheckIns } = req.body;
+        const { clerkId, category, title, description, dailyTarget,targetCheckIns,mode } = req.body;
         const user = await User.findOne({clerkId});
         if(!user) return res.status(404).json({message:"User not found"});
         const goal = await Goal.create({
@@ -13,7 +13,9 @@ export const createGoal = async(req,res)=>{
           description,
           dailyTarget,
           targetCheckIns,
-});
+          mode,
+          status: "active",
+        });
         res.status(201).json(goal);
     }
     catch(error){

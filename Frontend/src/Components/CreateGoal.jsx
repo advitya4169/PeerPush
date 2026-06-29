@@ -1,6 +1,7 @@
 import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Code2,
   Dumbbell,
@@ -12,6 +13,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 function CreateGoal({ goals, setGoals, setGoalCount }) {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("solo");
   const [targetCheckIns, setTargetCheckIns] = useState(30);
   const { user } = useUser();
   const [category, setCategory] = useState("Coding");
@@ -22,23 +25,41 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/api/goals", {
-        clerkId: user.id,
-        category,
-        title,
-        description,
-        dailyTarget,
-        targetCheckIns,
-      });
+      const goalRes = await axios.post(
+        "http://localhost:5000/api/goals",
+        {
+          clerkId: user.id,
+          category,
+          title,
+          description,
+          dailyTarget,
+          targetCheckIns,
+          mode,
+        }
+      );
 
-      setGoals((prev) => [res.data, ...prev]);
+      setGoals((prev) => [goalRes.data, ...prev]);
       setGoalCount((prev) => prev + 1);
 
       setTitle("");
       setDescription("");
       setDailyTarget("");
-      document.getElementById("goal_success_modal")?.showModal();
-    } catch (error) {
+
+      if (mode === "partner") {
+        await axios.post(
+          "http://localhost:5000/api/matchmaking/join",
+          {
+            clerkId: user.id,
+            goalId: goalRes.data._id,
+          }
+        );
+
+        navigate(`/missions/${goalRes.data._id}`);
+      } else {
+        document.getElementById("goal_success_modal")?.showModal();
+      }
+    }
+    catch (error) {
       console.log(error);
     }
   };
@@ -137,7 +158,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                 required
               />
             </div>
-              <div>
+            <div>
               <label className="label">
                 <span className="label-text text-base-content/70">
                   Daily Target
@@ -150,8 +171,8 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                 value={dailyTarget}
                 onChange={(e) => setDailyTarget(e.target.value)}
               />
-              </div>
-              <div>
+            </div>
+            <div>
               <label className="label">
                 <span className="label-text font-medium">
                   Target Check-ins &nbsp;
@@ -167,7 +188,52 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                   setTargetCheckIns(Number(e.target.value))
                 }
               />
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text font-medium">
+                  Mission Mode
+                </span>
+              </label>
+
+              <div className="grid grid-cols-2 gap-2 mt-4">
+
+                <button
+                  type="button"
+                  onClick={() => setMode("solo")}
+                  className={`rounded-3xl border p-5 text-left transition-all ${mode === "solo"
+                    ? "border-warning bg-warning/10"
+                    : "border-base-300"
+                    }`}
+                >
+                  <h3 className="font-bold text-lg">
+                    Solo
+                  </h3>
+
+                  <p className="text-sm text-base-content/60 mt-2">
+                    Build your streak independently.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMode("partner")}
+                  className={`rounded-3xl border p-5 text-left transition-all ${mode === "partner"
+                    ? "border-warning bg-warning/10"
+                    : "border-base-300"
+                    }`}
+                >
+                  <h3 className="font-bold text-lg">
+                    Find Partner
+                  </h3>
+
+                  <p className="text-sm text-base-content/60 mt-2">
+                    We'll match you with someone pursuing a similar mission.
+                  </p>
+                </button>
+
               </div>
+            </div>
             {/* Footer */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
               <div className="text-sm text-base-content/50">

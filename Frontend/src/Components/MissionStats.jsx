@@ -48,7 +48,7 @@ function MissionStats({
         </p>
 
         <h2
-          className={`text-2xl font-bold mt-5 ${
+          className={`text-3xl font-bold mt-5 ${
             checkedInToday
               ? "text-success"
               : "text-warning"
@@ -58,7 +58,7 @@ function MissionStats({
         </h2>
 
         <p className="text-base-content/60 mt-2">
-          Waiting for today's check-in
+          {checkedInToday ? "See you tomorrow!" : "Waiting for today's check-in"}
         </p>
 
       </div>

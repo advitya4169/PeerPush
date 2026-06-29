@@ -5,35 +5,46 @@ import CheckInForm from "./CheckInForm";
 import CheckInFeed from "./CheckInFeed";
 import socket from "../socket";
 
-function PairDashboard({ mongoUser }) {
+function PairDashboard({ mission, mongoUser }) {
   const { user } = useUser();
-
   const [pair, setPair] = useState(null);
   const [timeLeft, setTimeLeft] = useState("");
+  const fetchPair = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/pairs/${mission.pairId}`
+      );
 
+      setPair(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
-    if (!mongoUser?.currentPairId) return;
-
-    const fetchPair = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/pairs/${mongoUser.currentPairId}`
-        );
-
-        setPair(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+    if (!mission?.pairId) return;
 
     fetchPair();
-  }, [mongoUser]);
+  }, [mission]);
 
   useEffect(() => {
     if (!pair) return;
 
     socket.emit("join-pair", pair._id);
   }, [pair]);
+
+  useEffect(() => {
+    if (!mission?.pairId) return;
+
+    const handleNewCheckIn = () => {
+        fetchPair();
+    };
+
+    socket.on("new-checkin", handleNewCheckIn);
+
+    return () => {
+        socket.off("new-checkin", handleNewCheckIn);
+    };
+}, [mission?.pairId]);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -52,8 +63,8 @@ function PairDashboard({ mongoUser }) {
         `${hrs.toString().padStart(2, "0")}:${mins
           .toString()
           .padStart(2, "0")}:${secs
-          .toString()
-          .padStart(2, "0")}`
+            .toString()
+            .padStart(2, "0")}`
       );
     };
 
@@ -64,6 +75,26 @@ function PairDashboard({ mongoUser }) {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+  const handleStreakUpdated = (data) => {
+    setPair((prev) => ({
+      ...prev,
+      streakCount: data.streakCount,
+      longestStreak: data.longestStreak,
+      lastBothCheckedIn: data.lastBothCheckedIn,
+    }));
+  };
+
+  socket.on("streak-updated", handleStreakUpdated);
+
+  return () => {
+    socket.off(
+      "streak-updated",
+      handleStreakUpdated
+    );
+  };
+}, []);
+
   if (!pair) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base-100">
@@ -72,11 +103,28 @@ function PairDashboard({ mongoUser }) {
     );
   }
 
-  const partner =
-    pair.user1Id.clerkId === user.id
-      ? pair.user2Id
-      : pair.user1Id;
+  const isUser1 = pair.user1Id.clerkId === user.id;
 
+  const me = isUser1 ? pair.user1Id : pair.user2Id;
+  const partner = isUser1 ? pair.user2Id : pair.user1Id;
+
+  const myGoal = isUser1 ? pair.goal1Id : pair.goal2Id;
+  const partnerGoal = isUser1 ? pair.goal2Id : pair.goal1Id;
+  const myCheckedIn = isUser1
+    ? pair.todayStatus.user1
+    : pair.todayStatus.user2;
+
+  const partnerCheckedIn = isUser1
+    ? pair.todayStatus.user2
+    : pair.todayStatus.user1;
+
+  const myFreezeUsed = isUser1
+    ? pair.freezesUsed.user1
+    : pair.freezesUsed.user2;
+
+  const partnerFreezeUsed = isUser1
+    ? pair.freezesUsed.user2
+    : pair.freezesUsed.user1;
   return (
     <div className="min-h-screen bg-base-100 overflow-hidden">
       {/* Background */}
@@ -112,7 +160,7 @@ function PairDashboard({ mongoUser }) {
                 <div className="avatar">
                   <div className="w-20 rounded-3xl ring ring-primary/20 ring-offset-base-100 ring-offset-2">
                     <img
-                      src={mongoUser?.avatar}
+                      src={me?.avatar}
                       alt="You"
                     />
                   </div>
@@ -144,22 +192,28 @@ function PairDashboard({ mongoUser }) {
             </div>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-  <div className="badge badge-success">
-    {pair.goalCategory}
-  </div>
 
-  <div className="badge badge-outline">
-    LONGEST {pair.longestStreak}
-  </div>
+              <div className="badge badge-success">
+                {myGoal.title}
+              </div>
 
-  <div className="badge badge-outline">
-    FREEZE {1 - pair.freezesUsed?.user1}
-  </div>
+              <div className="badge badge-info">
+                {partnerGoal.title}
+              </div>
 
-  <div className="badge badge-outline">
-    {pair.status.toUpperCase()}
-  </div>
-</div>
+              <div className="badge badge-outline">
+                LONGEST {pair.longestStreak}
+              </div>
+
+              <div className="badge badge-outline">
+                FREEZE {1 - myFreezeUsed}
+              </div>
+
+              <div className="badge badge-outline">
+                {pair.status.toUpperCase()}
+              </div>
+
+            </div>
           </div>
         </section>
 
@@ -171,31 +225,58 @@ function PairDashboard({ mongoUser }) {
               PARTNERSHIP
             </p>
 
-            <h2 className="text-3xl font-black mt-3">
-              {partner?.username || "Partner"}
-            </h2>
+            <div className="grid md:grid-cols-2 gap-5 mt-6">
 
-            <p className="text-base-content/60 mt-3">
-              Your consistency is now linked. Every report contributes
-              to a shared streak that both of you are responsible for.
-            </p>
-
-            <div className="divider"></div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs opacity-50 uppercase">
-                  Accountability Partner
+              {/* YOU */}
+              <div className="rounded-2xl border border-base-300 p-5">
+                <p className="text-xs uppercase opacity-50">
+                  YOUR MISSION
                 </p>
 
-                <p className="mt-1">
-                  {partner?.username}
+                <h3 className="text-xl font-bold mt-2">
+                  {myGoal.title}
+                </h3>
+
+                <p className="text-base-content/60 mt-3">
+                  {myGoal.description}
+                </p>
+
+                <div className="divider"></div>
+
+                <p className="text-xs uppercase opacity-50">
+                  DAILY TARGET
+                </p>
+
+                <p className="mt-2 font-medium">
+                  {myGoal.dailyTarget}
                 </p>
               </div>
 
-              <div className="badge badge-success badge-outline">
-                CONNECTED
+              {/* PARTNER */}
+              <div className="rounded-2xl border border-base-300 p-5">
+                <p className="text-xs uppercase opacity-50">
+                  PARTNER'S MISSION
+                </p>
+
+                <h3 className="text-xl font-bold mt-2">
+                  {partnerGoal.title}
+                </h3>
+
+                <p className="text-base-content/60 mt-3">
+                  {partnerGoal.description}
+                </p>
+
+                <div className="divider"></div>
+
+                <p className="text-xs uppercase opacity-50">
+                  DAILY TARGET
+                </p>
+
+                <p className="mt-2 font-medium">
+                  {partnerGoal.dailyTarget}
+                </p>
               </div>
+
             </div>
           </div>
 
@@ -224,24 +305,24 @@ function PairDashboard({ mongoUser }) {
         {/* WARNING */}
         <section className="rounded-[24px] border border-warning/20 bg-warning/5 p-6">
           <p className="text-warning font-semibold">
-  Streak Protection Active
-</p>
+            Streak Protection Active
+          </p>
 
-<p className="mt-2 text-base-content/60">
-  Each partner receives one freeze every month. If a daily report is
-  missed, the freeze is consumed automatically and the shared streak
-  survives.
-</p>
+          <p className="mt-2 text-base-content/60">
+            Each partner receives one freeze every month. If a daily report is
+            missed, the freeze is consumed automatically and the shared streak
+            survives.
+          </p>
 
-<div className="mt-4 flex gap-3">
-  <div className="badge badge-outline">
-    YOUR FREEZE: {1 - pair.freezesUsed?.user1}
-  </div>
+          <div className="mt-4 flex gap-3">
+            <div className="badge badge-outline">
+              YOUR FREEZE: {1 - myFreezeUsed}
+            </div>
 
-  <div className="badge badge-outline">
-    PARTNER FREEZE: {1 - pair.freezesUsed?.user2}
-  </div>
-</div>
+            <div className="badge badge-outline">
+              PARTNER FREEZE: {1 - partnerFreezeUsed}
+            </div>
+          </div>
         </section>
 
         {/* REPORT SECTION */}

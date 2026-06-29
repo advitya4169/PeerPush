@@ -7,7 +7,9 @@ export const getPairById = async (req, res) => {
 
     const pair = await Pair.findById(pairId)
       .populate("user1Id")
-      .populate("user2Id");
+      .populate("user2Id")
+      .populate("goal1Id")
+      .populate("goal2Id");
 
     if (!pair) {
       return res.status(404).json({
@@ -15,7 +17,31 @@ export const getPairById = async (req, res) => {
       });
     }
 
-    res.status(200).json(pair);
+    const today = new Date().toISOString().split("T")[0];
+
+    const todayCheckIns = await CheckIn.find({
+      pairId,
+      date: today,
+    });
+
+    const user1CheckedIn = todayCheckIns.some(
+      (checkIn) =>
+        checkIn.userId.toString() === pair.user1Id._id.toString()
+    );
+
+    const user2CheckedIn = todayCheckIns.some(
+      (checkIn) =>
+        checkIn.userId.toString() === pair.user2Id._id.toString()
+    );
+
+    res.status(200).json({
+      ...pair.toObject(),
+
+      todayStatus: {
+        user1: user1CheckedIn,
+        user2: user2CheckedIn,
+      },
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -109,29 +135,3 @@ export const validatePairStreak = async (req, res) => {
     });
   }
 };
-export const useFreeze = async(req,res)=>{
-  try{
-    const {pairId}=req.params;
-    const {clerkId}=req.body;
-    const user = await User.findOne({clerkId});
-    if(!user) return res.status(404).json({message:"User not found"});
-    const pair = await Pair.findById(pairId);
-    if(!pair) return res.status(404).json({message:"Pair not found"});
-    let freezeKey;
-    if(pair.user1Id.toString()===user._id.toString())
-      freezeKey="user1";
-    else if(pair.user2Id.toString()===user._id.toString())
-      freezeKey="user2";
-    else
-      return res.status(404).json({message:"User not in the pair"});
-    
-    if(pair.freezesUsed[freezeKey]>=1)
-        return res.status(200).json({message:"Freeze already used this week"});
-    pair.freezesUsed[freezeKey]+=1;
-    await pair.save();
-    return res.status(200).json({message:"Freeze used successfully"});
-  }
-  catch(error){
-    res.status(500).json({message:error.message});
-  }
-}

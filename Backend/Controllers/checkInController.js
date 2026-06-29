@@ -5,6 +5,7 @@ import { getIO } from "../socket.js";
 
 export const createCheckIn = async (req, res) => {
   try {
+    const io = getIO();
     const { clerkId, pairId, content, proofType} = req.body;
 
     const user = await User.findOne({ clerkId });
@@ -76,6 +77,11 @@ export const createCheckIn = async (req, res) => {
           new Date();
 
         await pair.save();
+        io.to(pairId).emit("streak-updated", {
+        streakCount: pair.streakCount,
+        longestStreak: pair.longestStreak,
+        lastBothCheckedIn: pair.lastBothCheckedIn,
+      });
 
         console.log(
           `Streak increased to ${pair.streakCount}`
@@ -92,7 +98,6 @@ export const createCheckIn = async (req, res) => {
         checkIn._id
       ).populate("userId");
 
-    const io = getIO();
     console.log("EMITTING CHECKIN");
     io.to(pairId).emit(
       "new-checkin",

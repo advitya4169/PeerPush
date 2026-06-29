@@ -16,25 +16,26 @@ function GoalList({ goals }) {
   const { user } = useUser();
   const [joiningGoal, setJoiningGoal] = useState(null);
   const navigate = useNavigate();
-  const joinQueue = async (goalId) => {
-    try {
-      setJoiningGoal(goalId);
+const joinQueue = async (goalId) => {
+  try {
+    setJoiningGoal(goalId);
 
-      await axios.post(
-        "http://localhost:5000/api/users/join-queue",
-        {
-          clerkId: user.id,
-          goalId,
-        }
-      );
+    const res = await axios.post(
+      "http://localhost:5000/api/matchmaking/join",
+      {
+        clerkId: user.id,
+        goalId,
+      }
+    );
 
-      document.getElementById("queue_modal")?.showModal();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setJoiningGoal(null);
-    }
-  };
+    navigate(`/missions/${goalId}`);
+
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setJoiningGoal(null);
+  }
+};
 
   const getCategoryIcon = (category) => {
     switch (category) {

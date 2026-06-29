@@ -7,16 +7,22 @@ function CheckInFeed({ pairId }) {
   const { user } = useUser();
   const [checkIns, setCheckIns] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    socket.on("new-checkin", (newCheckIn) => {
-      setCheckIns((prev) => [
-        newCheckIn,
-        ...prev,
-      ]);
-    });
 
-    return () => socket.off("new-checkin");
+  useEffect(() => {
+    const handleNewCheckIn = (newCheckIn) => {
+      setCheckIns((prev) => {
+        if (prev.some(c => c._id === newCheckIn._id))
+          return prev;
+
+        return [newCheckIn, ...prev];
+      });
+    };
+
+    socket.on("new-checkin", handleNewCheckIn);
+
+    return () => {
+      socket.off("new-checkin", handleNewCheckIn);
+    };
   }, []);
 
   useEffect(() => {
@@ -40,30 +46,50 @@ function CheckInFeed({ pairId }) {
   }, [pairId]);
 
   useEffect(() => {
+    const handleReactionUpdate = ({
+      checkInId,
+      reaction,
+    }) => {
+      setCheckIns((prev) =>
+        prev.map((checkIn) =>
+          checkIn._id === checkInId
+            ? {
+              ...checkIn,
+              partnerReaction: reaction,
+            }
+            : checkIn
+        )
+      );
+    };
+
     socket.on(
       "reaction-updated",
-      ({ checkInId, reaction }) => {
-        setCheckIns((prev) =>
-          prev.map((checkIn) =>
-            checkIn._id === checkInId
-              ? {
-                  ...checkIn,
-                  partnerReaction: reaction,
-                }
-              : checkIn
-          )
-        );
-      }
+      handleReactionUpdate
     );
 
-    return () =>
-      socket.off("reaction-updated");
+    return () => {
+      socket.off(
+        "reaction-updated",
+        handleReactionUpdate
+      );
+    };
   }, []);
 
   const reactToCheckIn = async (
     checkInId,
     reaction
   ) => {
+    setCheckIns((prev) =>
+      prev.map((checkIn) =>
+        checkIn._id === checkInId
+          ? {
+            ...checkIn,
+            partnerReaction: reaction,
+          }
+          : checkIn
+      )
+    );
+
     try {
       await axios.patch(
         `http://localhost:5000/api/checkins/${checkInId}/react`,
@@ -75,19 +101,19 @@ function CheckInFeed({ pairId }) {
   };
 
   const reactionLabel = (reaction) => {
-  switch (reaction) {
-    case "👍":
-      return "MISSION VERIFIED";
-    case "🔥":
-      return "OUTSTANDING PROGRESS";
-    case "💪":
-      return "CONSISTENCY MAINTAINED";
-    default:
-      return "AWAITING PARTNER REVIEW";
-  }
-};
+    switch (reaction) {
+      case "👍":
+        return "MISSION VERIFIED";
+      case "🔥":
+        return "OUTSTANDING PROGRESS";
+      case "💪":
+        return "CONSISTENCY MAINTAINED";
+      default:
+        return "AWAITING PARTNER REVIEW";
+    }
+  };
 
-  if (loading) {
+  if (loading && checkIns.length === 0) {
     return (
       <div className="py-10 flex justify-center">
         <span className="loading loading-spinner loading-lg text-warning"></span>
@@ -123,21 +149,19 @@ function CheckInFeed({ pairId }) {
               <div
                 key={checkIn._id}
                 className={`relative overflow-hidden rounded-[28px] border backdrop-blur-xl transition-all duration-300
-                ${
-                  isMine
+                ${isMine
                     ? "border-primary/20 bg-primary/5"
                     : "border-warning/20 bg-warning/5"
-                }`}
+                  }`}
               >
                 {/* Glow */}
 
                 <div
                   className={`absolute top-0 right-0 h-48 w-48 blur-3xl opacity-20
-                  ${
-                    isMine
+                  ${isMine
                       ? "bg-primary"
                       : "bg-warning"
-                  }`}
+                    }`}
                 />
 
                 <div className="relative p-6">
@@ -165,31 +189,30 @@ function CheckInFeed({ pairId }) {
                           {isMine
                             ? "You"
                             : checkIn.userId
-                                ?.username ||
-                              "Partner"}
+                              ?.username ||
+                            "Partner"}
                         </h3>
 
                         <p className="text-sm opacity-60">
                           {new Date(
-                         checkIn.createdAt || checkIn.date
-                        ).toLocaleString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-</p>
+                            checkIn.createdAt || checkIn.date
+                          ).toLocaleString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </p>
 
                       </div>
 
                     </div>
 
                     <div
-                      className={`badge ${
-                        isMine
+                      className={`badge ${isMine
                           ? "badge-primary"
                           : "badge-warning"
-                      }`}
+                        }`}
                     >
                       {isMine
                         ? "YOUR REPORT"
@@ -205,7 +228,7 @@ function CheckInFeed({ pairId }) {
                     <div className="rounded-2xl border border-base-300 bg-base-300/20 p-5">
 
                       {checkIn.proof.type ===
-                      "image" ? (
+                        "image" ? (
                         <img
                           src={
                             checkIn.proof.content
@@ -244,45 +267,48 @@ function CheckInFeed({ pairId }) {
                     </div>
 
                     {!isMine && (
-<div className="join">
+                      <div className="join">
 
-  <button
-    className="btn btn-sm btn-outline join-item"
-    onClick={() =>
-      reactToCheckIn(
-        checkIn._id,
-        "👍"
-      )
-    }
-  >
-    Mission Verified
-  </button>
+                        <button
+                          className="btn btn-sm btn-outline join-item"
+                          disabled={!!checkIn.partnerReaction}
+                          onClick={() =>
+                            reactToCheckIn(
+                              checkIn._id,
+                              "👍"
+                            )
+                          }
+                        >
+                          Mission Verified
+                        </button>
 
-  <button
-    className="btn btn-sm btn-warning join-item"
-    onClick={() =>
-      reactToCheckIn(
-        checkIn._id,
-        "🔥"
-      )
-    }
-  >
-    Outstanding
-  </button>
+                        <button
+                          className="btn btn-sm btn-warning join-item"
+                          disabled={!!checkIn.partnerReaction}
+                          onClick={() =>
+                            reactToCheckIn(
+                              checkIn._id,
+                              "🔥"
+                            )
+                          }
+                        >
+                          Outstanding
+                        </button>
 
-  <button
-    className="btn btn-sm btn-primary join-item"
-    onClick={() =>
-      reactToCheckIn(
-        checkIn._id,
-        "💪"
-      )
-    }
-  >
-    Consistent
-  </button>
+                        <button
+                          className="btn btn-sm btn-primary join-item"
+                          disabled={!!checkIn.partnerReaction}
+                          onClick={() =>
+                            reactToCheckIn(
+                              checkIn._id,
+                              "💪"
+                            )
+                          }
+                        >
+                          Consistent
+                        </button>
 
-</div>
+                      </div>
                     )}
 
                   </div>

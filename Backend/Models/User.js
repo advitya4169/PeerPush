@@ -20,15 +20,6 @@ const userSchema = new mongoose.Schema({
         enum:["morning","evening"],
         default:"evening",
     },
-    currentPairId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Pair",
-        default:null,
-    },
-    isInQueue:{
-        type:Boolean,
-        default:false,
-    },
 },{timestamps:true});
 
 export default mongoose.model("User", userSchema);
