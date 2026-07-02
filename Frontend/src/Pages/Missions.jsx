@@ -20,7 +20,9 @@ function Missions() {
         const res = await axios.get(
           `http://localhost:5000/api/goals/my/${user.id}`
         );
+        console.log("GOALS FROM API:", res.data);
 
+        setGoals(res.data);
         setGoals(res.data);
         setGoalCount(res.data.length);
       } catch (error) {

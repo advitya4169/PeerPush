@@ -30,7 +30,7 @@ export const getMyGoals = async(req,res)=>{
         const goals = await Goal.find({
         userId: user._id,
         status: {
-        $nin: ["completed", "failed"],
+        $nin: ["completed", "abandoned"],
       },
 }).sort({createdAt:-1});
         res.status(200).json(goals);
@@ -65,7 +65,7 @@ export const updateMissionStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["completed", "failed"].includes(status)) {
+    if (!["completed", "abandoned"].includes(status)) {
       return res.status(400).json({
         message: "Invalid status",
       });
@@ -106,7 +106,7 @@ export const getMissionHistory = async (req, res) => {
     const missions = await Goal.find({
       userId: user._id,
       status: {
-        $in: ["completed", "failed"],
+        $in: ["completed", "abandoned"],
       },
     }).sort({ updatedAt: -1 });
 

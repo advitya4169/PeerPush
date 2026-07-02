@@ -5,7 +5,7 @@ import CreateGoal from "../Components/CreateGoal";
 import GoalList from "../Components/GoalList";
 import PairDashboard from "../Components/PairDashboard";
 import Navbar from "../Components/Navbar";
-
+import { useNavigate } from "react-router-dom";
 import {
   Target,
   Handshake,
@@ -21,7 +21,7 @@ function Dashboard() {
   const [goalCount, setGoalCount] = useState(0);
   const [goals, setGoals] = useState([]);
   const { user } = useUser();
-
+const navigate = useNavigate();
   const [mongoUser, setMongoUser] = useState(null);
 
   useEffect(() => {
@@ -119,9 +119,30 @@ function Dashboard() {
                 </h1>
 
                 <p className="text-base-content/70 mt-5 text-lg max-w-2xl">
-                  Track missions independently or pair with someone who shares the
-                  consequences. Every check-in protects a streak.
+                  {goalCount === 0
+                    ? "Create your first mission and start building consistency with yourself or a partner."
+                    : "Track missions independently or pair with someone who shares the consequences. Every check-in protects a streak."}
                 </p>
+
+                <div className="mt-8 flex flex-wrap gap-4">
+                  {goalCount === 0 ? (
+                    <button
+                      onClick={() => navigate("/missions")}
+                      className="btn btn-warning btn-lg"
+                    >
+                      Create Your First Mission
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => navigate("/missions")}
+                        className="btn btn-warning btn-lg"
+                      >
+                        Create Mission
+                      </button>
+                    </>
+                  )}
+                </div>
 
 
               </div>

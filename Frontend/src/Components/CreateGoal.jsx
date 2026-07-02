@@ -253,27 +253,57 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
       </div>
 
       {/* Success Modal */}
-      <dialog id="goal_success_modal" className="modal">
-        <div className="modal-box">
-          <h3 className="font-bold text-xl flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-success" />
-            Mission Created
-          </h3>
+      {/* Success Modal */}
+<dialog id="goal_success_modal" className="modal">
+  <div className="modal-box rounded-[28px] border border-success/20 bg-base-200">
 
-          <p className="py-4 text-base-content/70">
-            Your mission is ready. Next step: enter matchmaking and find your
-            accountability partner.
-          </p>
+    <div className="flex items-center gap-3">
+      <CheckCircle2 className="w-7 h-7 text-success" />
 
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-warning">
-                Continue
-              </button>
-            </form>
-          </div>
-        </div>
-      </dialog>
+      <h3 className="text-2xl font-black">
+        Mission Created
+      </h3>
+    </div>
+
+    <p className="mt-5 text-base-content/70 leading-relaxed">
+      Your solo mission is ready. Stay consistent, submit your daily check-ins,
+      and build your streak one day at a time.
+    </p>
+
+    <div className="mt-6 rounded-2xl border border-success/20 bg-success/5 p-4">
+      <p className="font-medium text-success">
+        You're all set.
+      </p>
+
+      <p className="text-sm text-base-content/60 mt-2">
+        Head to your mission dashboard to complete your first daily check-in.
+      </p>
+    </div>
+
+    <div className="modal-action">
+
+      <form method="dialog">
+        <button
+          className="btn btn-outline"
+        >
+          Stay Here
+        </button>
+      </form>
+
+      <button
+        className="btn btn-warning"
+        onClick={() => {
+          document.getElementById("goal_success_modal")?.close();
+          navigate(`/missions/${goals[0]._id}`);
+        }}
+      >
+        Go to Mission
+      </button>
+
+    </div>
+
+  </div>
+</dialog>
     </>
   );
 }

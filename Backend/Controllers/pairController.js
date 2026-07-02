@@ -1,6 +1,7 @@
 import Pair from "../Models/Pair.js";
 import CheckIn from "../Models/CheckIn.js";
 import User from "../Models/User.js";
+
 export const getPairById = async (req, res) => {
   try {
     const { pairId } = req.params;
@@ -132,6 +133,46 @@ export const validatePairStreak = async (req, res) => {
 
     res.status(500).json({
       message: error.message,
+    });
+  }
+};
+
+export const getTodayStatus = async (req, res) => {
+  try {
+    const { pairId } = req.params;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const pair = await Pair.findById(pairId);
+
+    if (!pair) {
+      return res.status(404).json({
+        message: "Pair not found",
+      });
+    }
+
+    const [user1, user2] = await Promise.all([
+      CheckIn.exists({
+        pairId,
+        userId: pair.user1Id,
+        date: today,
+      }),
+
+      CheckIn.exists({
+        pairId,
+        userId: pair.user2Id,
+        date: today,
+      }),
+    ]);
+
+    res.json({
+      user1: !!user1,
+      user2: !!user2,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
     });
   }
 };

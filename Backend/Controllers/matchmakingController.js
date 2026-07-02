@@ -27,7 +27,21 @@ export const joinQueue = async (req, res) => {
     }
 
     const goal = await Goal.findById(goalId);
+    const existingPartnerMission = await Goal.findOne({
+        userId: user._id,
+        pairId: { $ne: null },
+        status: "active",
+      });
 
+      if (
+        existingPartnerMission &&
+        existingPartnerMission._id.toString() !== goal._id.toString()
+      ) {
+        return res.status(409).json({
+          message:
+            "You already have an active partnership. Finish it before starting another.",
+        });
+      }
     if (!goal) {
       return res.status(404).json({
         message: "Goal not found",
@@ -172,3 +186,4 @@ export const cancelMatchmaking = async (req, res) => {
     });
   }
 };
+

@@ -92,75 +92,69 @@ function MissionPage() {
       {mission.status === "searching" ? (
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-6">
 
-          <div className="w-full max-w-2xl rounded-[36px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-10 text-center">
+          <div className="w-full max-w-2xl rounded-[36px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-12 text-center">
 
-            <span className="loading loading-spinner loading-lg text-warning"></span>
-
-            <div className="badge badge-warning badge-outline mt-6">
+            <div className="badge badge-warning badge-outline">
               MATCHMAKING
             </div>
 
-            <h1 className="text-4xl font-black mt-5">
-              Finding Your Accountability Partner
+            <h1 className="text-4xl font-black mt-6">
+              Finding Your Partner
             </h1>
 
-            <p className="mt-4 text-base-content/60">
-              We're searching for someone pursuing a similar mission.
+            <p className="mt-4 text-base-content/60 max-w-lg mx-auto leading-relaxed">
+              We're looking for someone pursuing a similar mission.
               You'll be matched automatically as soon as we find one.
             </p>
 
-            <div className="divider"></div>
-
-            <div className="grid grid-cols-2 gap-6 text-left">
-
-              <div className="rounded-2xl border border-base-300 p-5">
-                <p className="text-xs uppercase opacity-50">
-                  Mission
-                </p>
-
-                <h2 className="font-bold mt-2">
-                  {mission.title}
-                </h2>
-              </div>
-
-              <div className="rounded-2xl border border-base-300 p-5">
-                <p className="text-xs uppercase opacity-50">
-                  Category
-                </p>
-
-                <h2 className="font-bold mt-2">
-                  {mission.category}
-                </h2>
-              </div>
-              <div className="mt-8 flex justify-center">
-
-                <button
-                  className="btn btn-outline btn-error"
-                  onClick={async () => {
-                    try {
-
-                      const res = await axios.patch(
-                        `http://localhost:5000/api/matchmaking/cancel/${mission._id}`
-                      );
-
-                      setMission(res.data.goal);
-
-                    } catch (error) {
-                      console.log(error);
-                    }
-                  }}
-                >
-                  Cancel Search
-                </button>
-
-              </div>
+            <div className="flex justify-center mt-10">
+              <span className="loading loading-spinner loading-lg text-warning"></span>
             </div>
 
-            <div className="alert alert-warning mt-8">
+            <div className="mt-12 rounded-2xl border border-base-300 bg-base-100/30 p-6 text-left">
 
-              <span>
-                This page refreshes automatically when a partner is found.
-              </span>
+              <div className="flex justify-between items-center">
+
+                <div>
+                  <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+                    Mission
+                  </p>
+
+                  <h2 className="font-bold text-xl mt-2">
+                    {mission.title}
+                  </h2>
+                </div>
+
+                <div className="badge badge-outline">
+                  {mission.category}
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="mt-8 flex items-center justify-between">
+
+              <p className="text-sm text-base-content/50">
+                Searching automatically...
+              </p>
+
+              <button
+                className="btn btn-outline btn-error"
+                onClick={async () => {
+                  try {
+                    const res = await axios.patch(
+                      `http://localhost:5000/api/matchmaking/cancel/${mission._id}`
+                    );
+
+                    setMission(res.data.goal);
+                  } catch (error) {
+                    console.log(error);
+                  }
+                }}
+              >
+                Cancel Search
+              </button>
 
             </div>
 

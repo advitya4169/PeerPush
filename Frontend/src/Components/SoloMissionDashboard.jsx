@@ -79,6 +79,7 @@ function SoloMissionDashboard({ mission: initialMission }) {
             setContent("");
             setImage(null);
             setPreview("");
+            console.log(res.data);
             setMission(res.data.goal);
             await fetchCheckIns();
         } catch (error) {
@@ -192,8 +193,8 @@ function SoloMissionDashboard({ mission: initialMission }) {
                 <MissionCheckIn
                     mission={mission}
                     checkedInToday={checkedInToday}
-                    onSuccess={async () => {
-                        await fetchMission();
+                    onSuccess={async (updatedMission) => {
+                        setMission(updatedMission);
                         await fetchCheckIns();
                     }}
                 />
@@ -219,7 +220,7 @@ function SoloMissionDashboard({ mission: initialMission }) {
 
                 <section className="mt-8 rounded-[32px] border border-error/20 bg-base-200/40 backdrop-blur-xl p-8">
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pr-7">
 
                         <div>
                             <div className="badge badge-outline mb-3">
@@ -239,7 +240,11 @@ function SoloMissionDashboard({ mission: initialMission }) {
                         <div className="flex gap-4">
 
                             <button
-                                onClick={() => updateStatus("failed")}
+                                onClick={() =>
+                                    document
+                                        .getElementById("abandon_mission_modal")
+                                        ?.showModal()
+                                }
                                 className="btn btn-error btn-outline"
                             >
                                 Abandon Mission
@@ -252,6 +257,64 @@ function SoloMissionDashboard({ mission: initialMission }) {
                 </section>
 
             </div>
+            <dialog
+                id="abandon_mission_modal"
+                className="modal"
+            >
+                <div className="modal-box rounded-[28px]">
+
+                    <div className="badge badge-error badge-outline mb-4">
+                        CONFIRM ACTION
+                    </div>
+
+                    <h3 className="text-2xl font-black">
+                        Abandon Mission?
+                    </h3>
+
+                    <p className="mt-4 text-base-content/60 leading-relaxed">
+                        This will mark your mission as abandoned and end your current
+                        progress. You can always create a new mission later, but this
+                        mission's streak will no longer continue.
+                    </p>
+
+                    <div className="rounded-2xl border border-error/20 bg-error/5 p-4 mt-6">
+
+                        <p className="font-semibold">
+                            {mission.title}
+                        </p>
+
+                        <p className="text-sm text-base-content/60 mt-1">
+                            Current Streak: {mission.currentStreak} day
+                            {mission.currentStreak !== 1 && "s"}
+                        </p>
+
+                    </div>
+
+                    <div className="modal-action">
+
+                        <form method="dialog">
+                            <button className="btn btn-outline">
+                                Cancel
+                            </button>
+                        </form>
+
+                        <button
+                            className="btn btn-error"
+                            onClick={async () => {
+                                document
+                                    .getElementById("abandon_mission_modal")
+                                    ?.close();
+
+                                await updateStatus("abandoned");
+                            }}
+                        >
+                            Yes, Abandon Mission
+                        </button>
+
+                    </div>
+
+                </div>
+            </dialog>
         </div>
 
     );

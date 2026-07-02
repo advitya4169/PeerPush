@@ -6,6 +6,10 @@ import CheckInFeed from "./CheckInFeed";
 import socket from "../socket";
 
 function PairDashboard({ mission, mongoUser }) {
+  const [todayStatus, setTodayStatus] = useState({
+    me: false,
+    partner: false,
+  });
   const { user } = useUser();
   const [pair, setPair] = useState(null);
   const [timeLeft, setTimeLeft] = useState("");
@@ -16,6 +20,52 @@ function PairDashboard({ mission, mongoUser }) {
       );
 
       setPair(res.data);
+
+      await fetchTodayStatus(res.data);
+
+      return res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const fetchTodayStatus = async (currentPair) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/checkIns/${mission.pairId}`
+      );
+
+      const today = new Date().toISOString().split("T")[0];
+
+      const todays = res.data.filter(
+        (checkIn) =>
+          checkIn.date.split("T")[0] === today
+      );
+
+      const isUser1 =
+        currentPair.user1Id.clerkId === user.id;
+
+      const me = isUser1
+        ? currentPair.user1Id
+        : currentPair.user2Id;
+
+      const partner = isUser1
+        ? currentPair.user2Id
+        : currentPair.user1Id;
+
+      const myCheckIn = todays.find(
+        (c) => c.userId._id === me._id
+      );
+
+      const partnerCheckIn = todays.find(
+        (c) => c.userId._id === partner._id
+      );
+
+      setTodayStatus({
+        me: !!myCheckIn,
+        partner: !!partnerCheckIn,
+        myTime: myCheckIn?.createdAt,
+        partnerTime: partnerCheckIn?.createdAt,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -35,16 +85,16 @@ function PairDashboard({ mission, mongoUser }) {
   useEffect(() => {
     if (!mission?.pairId) return;
 
-    const handleNewCheckIn = () => {
-        fetchPair();
+    const handleNewCheckIn = async () => {
+      await fetchPair();
     };
 
     socket.on("new-checkin", handleNewCheckIn);
 
     return () => {
-        socket.off("new-checkin", handleNewCheckIn);
+      socket.off("new-checkin", handleNewCheckIn);
     };
-}, [mission?.pairId]);
+  }, [mission?.pairId]);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -76,24 +126,24 @@ function PairDashboard({ mission, mongoUser }) {
   }, []);
 
   useEffect(() => {
-  const handleStreakUpdated = (data) => {
-    setPair((prev) => ({
-      ...prev,
-      streakCount: data.streakCount,
-      longestStreak: data.longestStreak,
-      lastBothCheckedIn: data.lastBothCheckedIn,
-    }));
-  };
+    const handleStreakUpdated = (data) => {
+      setPair((prev) => ({
+        ...prev,
+        streakCount: data.streakCount,
+        longestStreak: data.longestStreak,
+        lastBothCheckedIn: data.lastBothCheckedIn,
+      }));
+    };
 
-  socket.on("streak-updated", handleStreakUpdated);
+    socket.on("streak-updated", handleStreakUpdated);
 
-  return () => {
-    socket.off(
-      "streak-updated",
-      handleStreakUpdated
-    );
-  };
-}, []);
+    return () => {
+      socket.off(
+        "streak-updated",
+        handleStreakUpdated
+      );
+    };
+  }, []);
 
   if (!pair) {
     return (
@@ -216,7 +266,130 @@ function PairDashboard({ mission, mongoUser }) {
             </div>
           </div>
         </section>
+        <section className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
 
+          <p className="text-xs tracking-[0.3em] uppercase opacity-50">
+            TODAY'S MISSION
+          </p>
+
+          <div className="mt-10">
+
+            {/* Shared Progress */}
+            <div className="flex items-center gap-4">
+
+              <div className="flex flex-col items-center min-w-[90px]">
+                <div
+                  className={`w-4 h-4 rounded-full transition-all duration-300 ${todayStatus.me
+                      ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
+                      : "bg-base-300"
+                    }`}
+                />
+                <p className="mt-3 text-xs uppercase tracking-wider opacity-50">
+                  You
+                </p>
+                <p className="mt-1 font-medium">
+                  {todayStatus.me ? "Reported" : "Waiting"}
+                </p>
+
+                {todayStatus.myTime && (
+                  <p className="text-xs opacity-50 mt-1">
+                    {new Date(todayStatus.myTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex-1 relative h-[2px] rounded-full bg-base-300 overflow-hidden">
+
+                <div
+                  className={`absolute inset-y-0 left-0 transition-all duration-700 ${todayStatus.me && todayStatus.partner
+                      ? "w-full bg-success"
+                      : todayStatus.me
+                        ? "w-1/2 bg-primary"
+                        : "w-0"
+                    }`}
+                />
+
+              </div>
+
+              <div className="flex flex-col items-center min-w-[90px]">
+                <div
+                  className={`w-4 h-4 rounded-full transition-all duration-300 ${todayStatus.partner
+                      ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
+                      : "bg-base-300"
+                    }`}
+                />
+                <p className="mt-3 text-xs uppercase tracking-wider opacity-50">
+                  Partner
+                </p>
+                <p className="mt-1 font-medium">
+                  {todayStatus.partner ? "Reported" : "Waiting"}
+                </p>
+
+                {todayStatus.partnerTime && (
+                  <p className="text-xs opacity-50 mt-1">
+                    {new Date(todayStatus.partnerTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            {/* Center Status */}
+            <div className="mt-10 rounded-2xl border border-base-300 bg-base-100/40 p-6 text-center">
+
+              <p className="text-3xl font-bold">
+                {(todayStatus.me ? 1 : 0) + (todayStatus.partner ? 1 : 0)}
+                <span className="text-base opacity-40"> / 2</span>
+              </p>
+
+              <p className="mt-2 text-sm uppercase tracking-[0.25em] opacity-50">
+                Reports Received
+              </p>
+
+              <div className="w-full h-2 rounded-full bg-base-300 mt-6 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${todayStatus.me && todayStatus.partner
+                      ? "w-full bg-success"
+                      : todayStatus.me || todayStatus.partner
+                        ? "w-1/2 bg-primary"
+                        : "w-0"
+                    }`}
+                />
+              </div>
+
+              {todayStatus.me && todayStatus.partner ? (
+                <>
+                  <p className="mt-6 text-xl font-semibold">
+                    Day Complete
+                  </p>
+
+                  <p className="opacity-60 mt-2">
+                    Shared streak secured for today.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-6 text-xl font-semibold">
+                    Waiting for your partner
+                  </p>
+
+                  <p className="opacity-60 mt-2">
+                    Both reports are required to secure today's streak.
+                  </p>
+                </>
+              )}
+
+            </div>
+
+          </div>
+
+        </section>
         {/* INFO GRID */}
         <section className="grid lg:grid-cols-2 gap-6">
           {/* PARTNERSHIP */}

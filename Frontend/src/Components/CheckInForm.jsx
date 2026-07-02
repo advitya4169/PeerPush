@@ -123,7 +123,7 @@ function CheckInForm({ pairId }) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Solved 5 heap questions, revised priority queues, completed one mock interview..."
-          className="textarea textarea-bordered w-full bg-base-300/20 resize-none"
+          className="textarea textarea-bordered w-full bg-base-300/20 resize-none outline-none"
         />
       </div>
 

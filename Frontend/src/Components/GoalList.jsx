@@ -16,26 +16,34 @@ function GoalList({ goals }) {
   const { user } = useUser();
   const [joiningGoal, setJoiningGoal] = useState(null);
   const navigate = useNavigate();
-const joinQueue = async (goalId) => {
-  try {
-    setJoiningGoal(goalId);
+  const activePartnerGoal = goals.find(
+    (goal) =>
+      goal.mode === "partner" &&
+      goal.status === "active" &&
+      goal.pairId
+  );
 
-    const res = await axios.post(
-      "http://localhost:5000/api/matchmaking/join",
-      {
-        clerkId: user.id,
-        goalId,
-      }
-    );
+  const hasActivePartnership = !!activePartnerGoal;
+  const joinQueue = async (goalId) => {
+    try {
+      setJoiningGoal(goalId);
 
-    navigate(`/missions/${goalId}`);
+      const res = await axios.post(
+        "http://localhost:5000/api/matchmaking/join",
+        {
+          clerkId: user.id,
+          goalId,
+        }
+      );
 
-  } catch (error) {
-    console.log(error);
-  } finally {
-    setJoiningGoal(null);
-  }
-};
+      navigate(`/missions/${goalId}`);
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setJoiningGoal(null);
+    }
+  };
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -142,30 +150,53 @@ const joinQueue = async (goalId) => {
                       </p>
 
                       <p className="font-medium mt-1">
-                        Not Paired Yet
+                        {goal.pairId
+                          ? "Shared Streak Active"
+                          : hasActivePartnership
+                            ? "Unavailable"
+                            : "Ready for Partnership"}
                       </p>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        joinQueue(goal._id);
-                      }}
-                      disabled={joiningGoal === goal._id}
-                      className="btn btn-warning gap-2"
-                    >
-                      {joiningGoal === goal._id ? (
-                        <>
-                          <span className="loading loading-spinner loading-xs"></span>
-                          Joining...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-4 h-4" />
-                          Enter Matchmaking
-                        </>
-                      )}
-                    </button>
+                    {goal.pairId ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/missions/${goal._id}`);
+                        }}
+                        className="btn btn-success gap-2"
+                      >
+                        Open Partnership
+                      </button>
+                    ) : hasActivePartnership ? (
+                      <button
+                        disabled
+                        className="btn btn-disabled"
+                      >
+                        Partnership Active
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          joinQueue(goal._id);
+                        }}
+                        disabled={joiningGoal === goal._id}
+                        className="btn btn-warning gap-2"
+                      >
+                        {joiningGoal === goal._id ? (
+                          <>
+                            <span className="loading loading-spinner loading-xs"></span>
+                            Joining...
+                          </>
+                        ) : (
+                          <>
+                            <Search className="w-4 h-4" />
+                            Find Partner
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
