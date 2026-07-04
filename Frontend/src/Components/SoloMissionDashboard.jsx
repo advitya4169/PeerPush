@@ -12,6 +12,7 @@ import MissionActivity from "./MissionActivity.jsx";
 import MissionStatistics from "./MissionStatistics.jsx";
 import MissionCheckIn from "./MissionCheckIn.jsx";
 function SoloMissionDashboard({ mission: initialMission }) {
+    const [missionCompleted, setMissionCompleted] = useState(false);
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState("");
     const { user } = useUser();
@@ -193,9 +194,16 @@ function SoloMissionDashboard({ mission: initialMission }) {
                 <MissionCheckIn
                     mission={mission}
                     checkedInToday={checkedInToday}
-                    onSuccess={async (updatedMission) => {
+                    onSuccess={async (updatedMission, completed) => {
                         setMission(updatedMission);
                         await fetchCheckIns();
+
+                        if (completed) {
+                            setMissionCompleted(true);
+                            document
+                                .getElementById("mission_complete_modal")
+                                ?.showModal();
+                        }
                     }}
                 />
 
@@ -309,6 +317,76 @@ function SoloMissionDashboard({ mission: initialMission }) {
                             }}
                         >
                             Yes, Abandon Mission
+                        </button>
+
+                    </div>
+
+                </div>
+            </dialog>
+            <dialog
+                id="mission_complete_modal"
+                className="modal"
+            >
+                <div className="modal-box rounded-[32px]">
+
+                    <div className="badge badge-success badge-outline mb-4">
+                        MISSION COMPLETE
+                    </div>
+
+                    <h2 className="text-3xl font-black">
+                        Congratulations!
+                    </h2>
+
+                    <p className="mt-4 text-base-content/60 leading-relaxed">
+                        You've successfully completed your mission.
+                        Your consistency paid off.
+                    </p>
+
+                    <div className="mt-8 rounded-2xl border border-success/20 bg-success/5 p-5">
+
+                        <p className="font-semibold">
+                            {mission.title}
+                        </p>
+
+                        <div className="mt-4 flex justify-between">
+
+                            <div>
+                                <p className="text-xs uppercase opacity-50">
+                                    Target
+                                </p>
+
+                                <p className="font-bold">
+                                    {mission.targetCheckIns} Check-ins
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-xs uppercase opacity-50">
+                                    Longest Streak
+                                </p>
+
+                                <p className="font-bold">
+                                    {mission.longestStreak} Days
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div className="modal-action">
+
+                        <button
+                            className="btn btn-warning"
+                            onClick={() => {
+                                document
+                                    .getElementById("mission_complete_modal")
+                                    ?.close();
+
+                                navigate("/missions");
+                            }}
+                        >
+                            Back to Missions
                         </button>
 
                     </div>

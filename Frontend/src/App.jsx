@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import axios from "axios";
 import Dashboard from "./Pages/Dashboard";
 import pfp1 from "../src/assets/pfp1.png";
-import pfp2 from "../src/assets/pfp2.webp";
+import pfp2 from "../src/assets/pfp2.png";
 import { Routes, Route } from "react-router-dom";
 import SoloPage from "./Pages/SoloPage";
 import PartnerPage from "./Pages/PartnerPage";

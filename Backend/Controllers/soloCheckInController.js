@@ -96,7 +96,8 @@ await goal.save();
       message: "Check-in submitted successfully.",
       checkIn: populatedCheckIn,
       goal,
-    });
+      missionCompleted: goal.status === "completed",
+});
   } catch (error) {
     res.status(500).json({
       message: error.message,

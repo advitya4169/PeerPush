@@ -13,7 +13,7 @@ function MissionPage() {
 
   const [mission, setMission] = useState(null);
   const [mongoUser, setMongoUser] = useState(null);
-
+  const [matchStatus, setMatchStatus] = useState(null);
   // Fetch mission
   useEffect(() => {
     const fetchMission = async () => {
@@ -42,11 +42,19 @@ function MissionPage() {
         );
 
 
-        if (statusRes.data.matched) {
+        if (!statusRes.data.matched) return;
+
+        setMatchStatus(statusRes.data);
+
+        // Equal targets OR already accepted
+        if (statusRes.data.requiresAcceptance) {
+          return;
+        }
+
+        if (statusRes.data.active) {
           const updatedMission = await axios.get(
             `http://localhost:5000/api/goals/${mission._id}`
           );
-
 
           setMission(updatedMission.data);
         }
@@ -57,6 +65,14 @@ function MissionPage() {
 
     return () => clearInterval(interval);
   }, [mission]);
+
+  useEffect(() => {
+    if (matchStatus?.requiresAcceptance) {
+      document
+        .getElementById("accept_challenge_modal")
+        ?.showModal();
+    }
+  }, [matchStatus]);
 
   // Fetch mongo user
   useEffect(() => {
@@ -136,7 +152,7 @@ function MissionPage() {
             <div className="mt-8 flex items-center justify-between">
 
               <p className="text-sm text-base-content/50">
-                Searching automatically...
+                Searching....
               </p>
 
               <button
@@ -166,6 +182,79 @@ function MissionPage() {
       ) : (
         <PairDashboard mission={mission} mongoUser={mongoUser} />
       )}
+      <dialog id="accept_challenge_modal" className="modal">
+        <div className="modal-box max-w-lg">
+
+          <h3 className="font-bold text-2xl">
+            Partner Found 🎉
+          </h3>
+
+          <p className="mt-6">
+            <span className="font-semibold">Your challenge:</span>{" "}
+            {matchStatus?.yourTarget} days
+          </p>
+
+          <p className="mt-2">
+            <span className="font-semibold">Partner's challenge:</span>{" "}
+            {matchStatus?.partnerTarget} days
+          </p>
+
+          <div className="divider"></div>
+
+          <p className="text-base-content/70 leading-relaxed">
+            This partnership follows the longer challenge (
+            {Math.max(
+              matchStatus?.yourTarget || 0,
+              matchStatus?.partnerTarget || 0
+            )}{" "}
+            days).
+          </p>
+
+          <p className="mt-4 text-base-content/70">
+            If you accept, you'll continue checking in after completing your own
+            goal so both partners can finish together.
+          </p>
+
+          <div className="modal-action">
+
+            <button
+              className="btn btn-outline"
+              onClick={async () => {
+                await axios.patch(
+                  `http://localhost:5000/api/matchmaking/cancel/${mission._id}`
+                );
+
+                window.location.reload();
+              }}
+            >
+              Leave Queue
+            </button>
+
+            <button
+              className="btn btn-warning"
+              onClick={async () => {
+                await axios.patch(
+                  `http://localhost:5000/api/matchmaking/accept/${matchStatus.pairId}`
+                );
+
+                const updatedMission = await axios.get(
+                  `http://localhost:5000/api/goals/${mission._id}`
+                );
+
+                setMission(updatedMission.data);
+
+                document
+                  .getElementById("accept_challenge_modal")
+                  ?.close();
+              }}
+            >
+              Accept Challenge
+            </button>
+
+          </div>
+
+        </div>
+      </dialog>
     </div>
   );
 }

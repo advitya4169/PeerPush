@@ -64,6 +64,14 @@ const pairSchema = new mongoose.Schema({
         ref: "Goal",
         required: true,
     },
+    requiresAcceptance: {
+        type: Boolean,
+        default: false,
+    },
+    acceptedBySmallerTarget: {
+        type: Boolean,
+        default: true,
+    },
 
 },{timestamps:true});
 

@@ -95,31 +95,58 @@ export const joinQueue = async (req, res) => {
     }
 
     // Create pair
-    const pair = await Pair.create({
-      user1Id: user._id,
-      user2Id: partnerGoal.userId._id,
+    const requiresAcceptance =
+    goal.targetCheckIns !== partnerGoal.targetCheckIns;
 
-      goal1Id: goal._id,
-      goal2Id: partnerGoal._id,
+const currentIsSmaller =
+  goal.targetCheckIns < partnerGoal.targetCheckIns;
 
-      goalCategory: goal.category,
-    });
+const pair = await Pair.create({
+  user1Id: user._id,
+  user2Id: partnerGoal.userId._id,
 
-    // Update current mission
-    goal.status = "active";
-    goal.pairId = pair._id;
+  goal1Id: goal._id,
+  goal2Id: partnerGoal._id,
 
-    // Update partner mission
-    partnerGoal.status = "active";
-    partnerGoal.pairId = pair._id;
+  goalCategory: goal.category,
 
-    await goal.save();
-    await partnerGoal.save();
+  requiresAcceptance,
+  acceptedBySmallerTarget: !requiresAcceptance,
+});
 
-    res.status(200).json({
-      message: "Match Found!",
-      pair,
-    });
+    // Link both goals to the pair
+goal.pairId = pair._id;
+partnerGoal.pairId = pair._id;
+
+// Same target -> activate immediately
+if (!requiresAcceptance) {
+  goal.status = "active";
+  partnerGoal.status = "active";
+
+  await goal.save();
+  await partnerGoal.save();
+
+  return res.status(200).json({
+    message: "Match Found!",
+    pair,
+  });
+}
+
+// Different targets -> wait for smaller target user's confirmation
+goal.status = "searching";
+partnerGoal.status = "searching";
+
+await goal.save();
+await partnerGoal.save();
+
+return res.status(200).json({
+  requiresAcceptance: currentIsSmaller,
+  waitingForPartner: !currentIsSmaller,
+  yourTarget: goal.targetCheckIns,
+  partnerTarget: partnerGoal.targetCheckIns,
+  pairId: pair._id,
+});
+
   } catch (error) {
     console.error(error);
 
@@ -141,9 +168,89 @@ export const checkMatchStatus = async (req, res) => {
       });
     }
 
+    if (!goal.pairId) {
+      return res.status(200).json({
+        matched: false,
+      });
+    }
+
+    const pair = await Pair.findById(goal.pairId)
+      .populate("goal1Id")
+      .populate("goal2Id");
+
+    if (!pair) {
+      return res.status(200).json({
+        matched: false,
+      });
+    }
+
+    const currentGoal =
+      pair.goal1Id._id.toString() === goalId
+        ? pair.goal1Id
+        : pair.goal2Id;
+
+    const partnerGoal =
+      pair.goal1Id._id.toString() === goalId
+        ? pair.goal2Id
+        : pair.goal1Id;
+
+    const currentIsSmaller =
+      currentGoal.targetCheckIns < partnerGoal.targetCheckIns;
+
+    // Acceptance finished → both users can enter the pair dashboard
+if (!pair.requiresAcceptance) {
+  return res.status(200).json({
+    matched: true,
+    active: true,
+    pairId: pair._id,
+  });
+}
+
+return res.status(200).json({
+  matched: true,
+  active: false,
+  pairId: pair._id,
+  requiresAcceptance: currentIsSmaller,
+  waitingForPartner: !currentIsSmaller,
+  yourTarget: currentGoal.targetCheckIns,
+  partnerTarget: partnerGoal.targetCheckIns,
+});
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const acceptChallenge = async (req, res) => {
+  try {
+    const { pairId } = req.params;
+
+    const pair = await Pair.findById(pairId);
+
+    if (!pair) {
+      return res.status(404).json({
+        message: "Pair not found",
+      });
+    }
+
+    pair.requiresAcceptance = false;
+    pair.acceptedBySmallerTarget = true;
+
+    await pair.save();
+
+    const goal1 = await Goal.findById(pair.goal1Id);
+    const goal2 = await Goal.findById(pair.goal2Id);
+
+    goal1.status = "active";
+    goal2.status = "active";
+
+    await goal1.save();
+    await goal2.save();
+
     res.status(200).json({
-      matched: !!goal.pairId,
-      pairId: goal.pairId,
+      message: "Challenge accepted.",
     });
 
   } catch (error) {

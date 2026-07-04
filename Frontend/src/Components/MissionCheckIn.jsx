@@ -45,7 +45,7 @@ function MissionCheckIn({ mission, checkedInToday, onSuccess, }) {
             setImage(null);
             setPreview("");
 
-            onSuccess(res.data.goal);
+            onSuccess(res.data.goal, res.data.missionCompleted);
         } catch (error) {
             console.log(error);
             console.log(error.response);
@@ -129,7 +129,7 @@ function MissionCheckIn({ mission, checkedInToday, onSuccess, }) {
 
             {proofType === "text" && (
                 <textarea
-                    className="textarea textarea-bordered w-full h-40 mt-6 rounded-2xl"
+                    className="textarea textarea-bordered w-full h-40 mt-6 rounded-2xl outline-none"
                     placeholder="Describe what you accomplished today..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
@@ -169,4 +169,4 @@ function MissionCheckIn({ mission, checkedInToday, onSuccess, }) {
     )
 }
 
-export default MissionCheckIn
+export default MissionCheckIn;

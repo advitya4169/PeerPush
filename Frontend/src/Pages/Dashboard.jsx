@@ -21,7 +21,7 @@ function Dashboard() {
   const [goalCount, setGoalCount] = useState(0);
   const [goals, setGoals] = useState([]);
   const { user } = useUser();
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [mongoUser, setMongoUser] = useState(null);
 
   useEffect(() => {
@@ -89,6 +89,33 @@ const navigate = useNavigate();
   const partnerGoals = goals.filter(
     (goal) => goal.mode === "partner"
   );
+  const searchingGoals = partnerGoals.filter(
+    (goal) => goal.status === "searching"
+  );
+
+  const pairedGoals = partnerGoals.filter(
+    (goal) => goal.pairId
+  );
+
+  let dashboardStatus = "No Active Mission";
+  let statusColor = "text-base-content/50";
+
+  if (goalCount === 0) {
+    dashboardStatus = "No Active Mission";
+    statusColor = "text-base-content/50";
+  } else if (searchingGoals.length > 0) {
+    dashboardStatus = "Searching";
+    statusColor = "text-warning";
+  } else if (pairedGoals.length > 0) {
+    dashboardStatus = "Partnered";
+    statusColor = "text-success";
+  } else if (partnerGoals.length > 0) {
+    dashboardStatus = "Ready for Matchmaking";
+    statusColor = "text-info";
+  } else {
+    dashboardStatus = "Solo Focus";
+    statusColor = "text-primary";
+  }
   return (
     <div className="min-h-screen bg-base-100 text-base-content overflow-hidden">
       <Navbar />
@@ -164,10 +191,8 @@ const navigate = useNavigate();
                     Status
                   </p>
 
-                  <p className="text-lg font-semibold text-warning mt-3">
-                    {mongoUser.isInQueue
-                      ? "Searching"
-                      : "Ready"}
+                  <p className={`text-lg font-semibold mt-3 ${statusColor}`}>
+                    {dashboardStatus}
                   </p>
                 </div>
 

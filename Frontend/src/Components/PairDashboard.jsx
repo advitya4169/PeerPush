@@ -196,74 +196,81 @@ function PairDashboard({ mission, mongoUser }) {
               SHARED STREAK
             </div>
 
-            <h1 className="text-[120px] md:text-[160px] leading-none font-black tracking-tight">
+            <h1 className="text-8xl md:text-9xl font-black leading-none">
               {pair.streakCount}
             </h1>
 
-            <p className="tracking-[0.4em] text-xs opacity-60 mt-3">
-              SHARED DAYS
+            <p className="uppercase tracking-[0.3em] text-xs opacity-50 mt-2">
+              Shared Days
             </p>
 
-            <div className="mt-10 flex items-center justify-center gap-10">
+            <p className="text-base-content/60 mt-4 max-w-sm mx-auto">
+              Build consistency together. Your streak grows only when both partners report.
+            </p>
+
+            <div className="mt-12 flex items-center justify-center gap-10">
               {/* YOU */}
               <div className="text-center">
+
                 <div className="avatar">
-                  <div className="w-20 rounded-3xl ring ring-primary/20 ring-offset-base-100 ring-offset-2">
-                    <img
-                      src={me?.avatar}
-                      alt="You"
-                    />
+                  <div className="w-20 rounded-3xl ring ring-primary/20">
+                    <img src={me.avatar} />
                   </div>
                 </div>
 
-                <p className="mt-3 text-sm tracking-[0.25em] opacity-70">
+                <p className="mt-4 text-sm uppercase tracking-[0.3em] opacity-60">
                   YOU
                 </p>
-              </div>
 
-              {/* CONNECTION */}
-              <div className="w-24 h-px bg-gradient-to-r from-warning to-primary" />
+              </div>
+              <div className="flex items-center w-40">
+
+                <div
+                  className={`h-[2px] flex-1 transition-all duration-500 ${todayStatus.me
+                    ? "bg-primary"
+                    : "bg-base-300"
+                    }`}
+                />
+
+                <div
+                  className={`mx-3 w-3 h-3 rounded-full transition-all duration-500 ${todayStatus.me && todayStatus.partner
+                    ? "bg-success shadow-lg shadow-success/40"
+                    : todayStatus.me
+                      ? "bg-primary"
+                      : "bg-base-300"
+                    }`}
+                />
+
+                <div
+                  className={`h-[2px] flex-1 transition-all duration-500 ${todayStatus.partner
+                    ? "bg-warning"
+                    : "bg-base-300"
+                    }`}
+                />
+
+              </div>
 
               {/* PARTNER */}
               <div className="text-center">
+
                 <div className="avatar">
-                  <div className="w-20 rounded-3xl ring ring-warning/20 ring-offset-base-100 ring-offset-2">
-                    <img
-                      src={partner?.avatar}
-                      alt="Partner"
-                    />
+                  <div className="w-20 rounded-3xl ring ring-warning/20">
+                    <img src={partner.avatar} />
                   </div>
                 </div>
 
-                <p className="mt-3 text-sm tracking-[0.25em] opacity-70">
+                <p className="mt-4 text-sm uppercase tracking-[0.3em] opacity-60">
                   PARTNER
                 </p>
+
+
+
+
+
               </div>
             </div>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
 
-              <div className="badge badge-success">
-                {myGoal.title}
-              </div>
-
-              <div className="badge badge-info">
-                {partnerGoal.title}
-              </div>
-
-              <div className="badge badge-outline">
-                LONGEST {pair.longestStreak}
-              </div>
-
-              <div className="badge badge-outline">
-                FREEZE {1 - myFreezeUsed}
-              </div>
-
-              <div className="badge badge-outline">
-                {pair.status.toUpperCase()}
-              </div>
-
-            </div>
           </div>
         </section>
         <section className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
@@ -280,8 +287,8 @@ function PairDashboard({ mission, mongoUser }) {
               <div className="flex flex-col items-center min-w-[90px]">
                 <div
                   className={`w-4 h-4 rounded-full transition-all duration-300 ${todayStatus.me
-                      ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
-                      : "bg-base-300"
+                    ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
+                    : "bg-base-300"
                     }`}
                 />
                 <p className="mt-3 text-xs uppercase tracking-wider opacity-50">
@@ -305,10 +312,10 @@ function PairDashboard({ mission, mongoUser }) {
 
                 <div
                   className={`absolute inset-y-0 left-0 transition-all duration-700 ${todayStatus.me && todayStatus.partner
-                      ? "w-full bg-success"
-                      : todayStatus.me
-                        ? "w-1/2 bg-primary"
-                        : "w-0"
+                    ? "w-full bg-success"
+                    : todayStatus.me
+                      ? "w-1/2 bg-primary"
+                      : "w-0"
                     }`}
                 />
 
@@ -317,8 +324,8 @@ function PairDashboard({ mission, mongoUser }) {
               <div className="flex flex-col items-center min-w-[90px]">
                 <div
                   className={`w-4 h-4 rounded-full transition-all duration-300 ${todayStatus.partner
-                      ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
-                      : "bg-base-300"
+                    ? "bg-success shadow-[0_0_16px_rgba(34,197,94,.7)]"
+                    : "bg-base-300"
                     }`}
                 />
                 <p className="mt-3 text-xs uppercase tracking-wider opacity-50">
@@ -355,10 +362,10 @@ function PairDashboard({ mission, mongoUser }) {
               <div className="w-full h-2 rounded-full bg-base-300 mt-6 overflow-hidden">
                 <div
                   className={`h-full transition-all duration-500 ${todayStatus.me && todayStatus.partner
-                      ? "w-full bg-success"
-                      : todayStatus.me || todayStatus.partner
-                        ? "w-1/2 bg-primary"
-                        : "w-0"
+                    ? "w-full bg-success"
+                    : todayStatus.me || todayStatus.partner
+                      ? "w-1/2 bg-primary"
+                      : "w-0"
                     }`}
                 />
               </div>
@@ -456,7 +463,9 @@ function PairDashboard({ mission, mongoUser }) {
           {/* COUNTDOWN */}
           <div className="rounded-[28px] border border-warning/20 bg-warning/5 backdrop-blur-xl p-8">
             <p className="text-xs tracking-[0.3em] opacity-50">
-              DAILY DEADLINE
+              {todayStatus.me && todayStatus.partner
+                ? "NEXT REPORT"
+                : "DAILY DEADLINE"}
             </p>
 
             <div className="text-5xl md:text-6xl font-black font-mono mt-4">
@@ -464,14 +473,36 @@ function PairDashboard({ mission, mongoUser }) {
             </div>
 
             <p className="text-base-content/60 mt-4">
-              Remaining before the daily reporting window closes.
+              {todayStatus.me && todayStatus.partner
+                ? "Today's report is complete. Next check-in becomes available in:"
+                : "Remaining before the daily reporting window closes."}
             </p>
 
             <div className="divider"></div>
 
-            <div className="text-sm opacity-60">
-              Both partners must report progress before midnight.
-            </div>
+            {todayStatus.me && todayStatus.partner ? (
+              <div className="flex items-center justify-between">
+
+                <div>
+                  <p className="font-semibold text-success">
+                    ✓ Shared streak secured
+                  </p>
+
+                  <p className="text-sm opacity-60 mt-1">
+                    Come back after midnight for your next report.
+                  </p>
+                </div>
+
+                <div className="badge badge-success badge-outline">
+                  COMPLETE
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-sm opacity-60">
+                Both partners must report progress before midnight.
+              </div>
+            )}
           </div>
         </section>
 
