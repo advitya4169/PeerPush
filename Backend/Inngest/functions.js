@@ -10,7 +10,12 @@ export const validateDailyStreaks = inngest.createFunction(
   },
   // FIX: The handler function is now the second argument
   async ({ step }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+
+const dateToValidate = yesterday
+  .toISOString()
+  .split("T")[0];
     console.log("INNGEST RUNNING");
     // Wrap the initial fetch in step.run for proper Inngest execution
     const pairs = await step.run("fetch-active-pairs", async () => {
@@ -22,7 +27,7 @@ export const validateDailyStreaks = inngest.createFunction(
         return await CheckIn.findOne({
           pairId: pair._id,
           userId: pair.user1Id,
-          date: today,
+          date: dateToValidate
         });
       });
 
@@ -30,7 +35,7 @@ export const validateDailyStreaks = inngest.createFunction(
         return await CheckIn.findOne({
           pairId: pair._id,
           userId: pair.user2Id,
-          date: today,
+          date: dateToValidate,
         });
       });
 
