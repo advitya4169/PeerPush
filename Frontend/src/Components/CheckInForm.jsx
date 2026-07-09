@@ -37,7 +37,7 @@ function CheckInForm({ pairId }) {
       }
 
       await axios.post(
-        "http://localhost:5000/api/checkIns",
+        `${import.meta.env.VITE_API_URL}/api/checkIns`,
         {
           clerkId: user.id,
           pairId,

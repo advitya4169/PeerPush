@@ -31,7 +31,7 @@ function CheckInFeed({ pairId }) {
     const fetchCheckIns = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/checkins/${pairId}`
+          `${import.meta.env.VITE_API_URL}/api/checkins/${pairId}`
         );
 
         setCheckIns(res.data);
@@ -92,7 +92,7 @@ function CheckInFeed({ pairId }) {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/checkins/${checkInId}/react`,
+        `${import.meta.env.VITE_API_URL}/api/checkins/${checkInId}/react`,
         { reaction }
       );
     } catch (error) {

@@ -33,7 +33,7 @@ function MissionCheckIn({ mission, checkedInToday, onSuccess, }) {
                 finalContent = await uploadImage(image);
             }
             const res = await axios.post(
-                "http://localhost:5000/api/solo-checkins",
+                `${import.meta.env.VITE_API_URL}/api/solo-checkins`,
                 {
                     clerkId: user.id,
                     goalId: mission._id,

@@ -29,7 +29,7 @@ function GoalList({ goals }) {
       setJoiningGoal(goalId);
 
       const res = await axios.post(
-        "http://localhost:5000/api/matchmaking/join",
+        `${import.meta.env.VITE_API_URL}/api/matchmaking/join`,
         {
           clerkId: user.id,
           goalId,

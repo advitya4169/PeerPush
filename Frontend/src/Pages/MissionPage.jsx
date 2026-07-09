@@ -19,7 +19,7 @@ function MissionPage() {
     const fetchMission = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/goals/${id}`
+          `${import.meta.env.VITE_API_URL}/api/goals/${id}`
         );
 
         setMission(res.data);
@@ -38,7 +38,7 @@ function MissionPage() {
     const interval = setInterval(async () => {
       try {
         const statusRes = await axios.get(
-          `http://localhost:5000/api/matchmaking/status/${mission._id}`
+          `${import.meta.env.VITE_API_URL}/api/matchmaking/status/${mission._id}`
         );
 
 
@@ -53,7 +53,7 @@ function MissionPage() {
 
         if (statusRes.data.active) {
           const updatedMission = await axios.get(
-            `http://localhost:5000/api/goals/${mission._id}`
+            `${import.meta.env.VITE_API_URL}/api/goals/${mission._id}`
           );
 
           setMission(updatedMission.data);
@@ -81,7 +81,7 @@ function MissionPage() {
     const fetchMongoUser = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/users/me/${user.id}`
+          `${import.meta.env.VITE_API_URL}/api/users/me/${user.id}`
         );
 
         setMongoUser(res.data);
@@ -160,7 +160,7 @@ function MissionPage() {
                 onClick={async () => {
                   try {
                     const res = await axios.patch(
-                      `http://localhost:5000/api/matchmaking/cancel/${mission._id}`
+                      `${import.meta.env.VITE_API_URL}/api/matchmaking/cancel/${mission._id}`
                     );
 
                     setMission(res.data.goal);
@@ -221,7 +221,7 @@ function MissionPage() {
               className="btn btn-outline"
               onClick={async () => {
                 await axios.patch(
-                  `http://localhost:5000/api/matchmaking/cancel/${mission._id}`
+                  `${import.meta.env.VITE_API_URL}/api/matchmaking/cancel/${mission._id}`
                 );
 
                 window.location.reload();
@@ -234,11 +234,11 @@ function MissionPage() {
               className="btn btn-warning"
               onClick={async () => {
                 await axios.patch(
-                  `http://localhost:5000/api/matchmaking/accept/${matchStatus.pairId}`
+                  `${import.meta.env.VITE_API_URL}/api/matchmaking/accept/${matchStatus.pairId}`
                 );
 
                 const updatedMission = await axios.get(
-                  `http://localhost:5000/api/goals/${mission._id}`
+                  `${import.meta.env.VITE_API_URL}/api/goals/${mission._id}`
                 );
 
                 setMission(updatedMission.data);

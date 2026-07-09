@@ -18,7 +18,7 @@ function Missions() {
     const fetchGoals = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/goals/my/${user.id}`
+          `${import.meta.env.VITE_API_URL}/api/goals/my/${user.id}`
         );
         console.log("GOALS FROM API:", res.data);
 

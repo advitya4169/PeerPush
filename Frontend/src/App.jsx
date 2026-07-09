@@ -21,7 +21,7 @@ function App() {
   useEffect(() => {
     if (!isLoaded || !user) return;
 
-    axios.post("http://localhost:5000/api/users/sync", {
+    axios.post(`${import.meta.env.VITE_API_URL}/api/users/sync`, {
       clerkId: user.id,
       username: user.fullName,
       email: user.primaryEmailAddress?.emailAddress,

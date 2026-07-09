@@ -46,7 +46,7 @@ function PairDashboard({ mission, mongoUser }) {
   const fetchPair = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/pairs/${mission.pairId}`
+        `${import.meta.env.VITE_API_URL}/api/pairs/${mission.pairId}`
       );
 
       setPair(res.data);
@@ -61,7 +61,7 @@ function PairDashboard({ mission, mongoUser }) {
   const fetchTodayStatus = async (currentPair) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/checkIns/${mission.pairId}`
+        `${import.meta.env.VITE_API_URL}/api/checkIns/${mission.pairId}`
       );
 
       const today = new Date().toISOString().split("T")[0];
@@ -697,7 +697,7 @@ function PairDashboard({ mission, mongoUser }) {
               onClick={async () => {
                 try {
                   await axios.patch(
-                    `http://localhost:5000/api/pairs/${pair._id}/abandon`
+                    `${import.meta.env.VITE_API_URL}/api/pairs/${pair._id}/abandon`
                   );
                 } catch (error) {
                   console.log(error);

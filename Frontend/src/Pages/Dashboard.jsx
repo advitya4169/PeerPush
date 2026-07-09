@@ -30,11 +30,11 @@ function Dashboard() {
     const fetchUser = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/users/me/${user.id}`
+          `${import.meta.env.VITE_API_URL}/api/users/me/${user.id}`
         );
         setMongoUser(res.data);
         const goalsRes = await axios.get(
-          `http://localhost:5000/api/goals/my/${user.id}`
+          `${import.meta.env.VITE_API_URL}/api/goals/my/${user.id}`
         );
 
         setGoals(goalsRes.data);

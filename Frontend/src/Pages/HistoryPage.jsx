@@ -15,7 +15,7 @@ function HistoryPage() {
     const fetchHistory = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/goals/history/${user.id}`
+          `${import.meta.env.VITE_API_URL}/api/goals/history/${user.id}`
         );
 
         setMissions(res.data);

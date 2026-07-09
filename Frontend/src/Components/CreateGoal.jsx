@@ -26,7 +26,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
 
     try {
       const goalRes = await axios.post(
-        "http://localhost:5000/api/goals",
+        `${import.meta.env.VITE_API_URL}/api/goals`,
         {
           clerkId: user.id,
           category,
@@ -47,7 +47,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
 
       if (mode === "partner") {
         await axios.post(
-          "http://localhost:5000/api/matchmaking/join",
+          `${import.meta.env.VITE_API_URL}/api/matchmaking/join`,
           {
             clerkId: user.id,
             goalId: goalRes.data._id,

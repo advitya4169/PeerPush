@@ -26,7 +26,7 @@ function SoloMissionDashboard({ mission: initialMission }) {
     const fetchCheckIns = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:5000/api/solo-checkins/${mission._id}`
+                `${import.meta.env.VITE_API_URL}/api/solo-checkins/${mission._id}`
             );
 
             setCheckIns(res.data);
@@ -67,7 +67,7 @@ function SoloMissionDashboard({ mission: initialMission }) {
                 finalContent = await uploadImage(image);
             }
             const res = await axios.post(
-                "http://localhost:5000/api/solo-checkins",
+                `${import.meta.env.VITE_API_URL}/api/solo-checkins`,
                 {
                     clerkId: user.id,
                     goalId: mission._id,
@@ -98,7 +98,7 @@ function SoloMissionDashboard({ mission: initialMission }) {
     const updateStatus = async (status) => {
         try {
             await axios.patch(
-                `http://localhost:5000/api/goals/${mission._id}/status`,
+                `${import.meta.env.VITE_API_URL}/api/goals/${mission._id}/status`,
                 { status }
             );
 
