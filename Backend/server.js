@@ -18,6 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://peer-push.vercel.app",
     ],
     credentials: true,
   })
