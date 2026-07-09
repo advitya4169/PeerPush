@@ -4,15 +4,45 @@ import { useEffect, useState } from "react";
 import CheckInForm from "./CheckInForm";
 import CheckInFeed from "./CheckInFeed";
 import socket from "../socket";
-
+import { useNavigate } from "react-router-dom";
 function PairDashboard({ mission, mongoUser }) {
   const [todayStatus, setTodayStatus] = useState({
     me: false,
     partner: false,
   });
   const { user } = useUser();
+  const navigate = useNavigate();
   const [pair, setPair] = useState(null);
   const [timeLeft, setTimeLeft] = useState("");
+  const [showCompletedModal, setShowCompletedModal] = useState(false);
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+
+      const diff = midnight - now;
+
+      const hrs = Math.floor(diff / 1000 / 60 / 60);
+      const mins = Math.floor((diff / 1000 / 60) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft(
+        `${hrs.toString().padStart(2, "0")}:${mins
+          .toString()
+          .padStart(2, "0")}:${secs
+            .toString()
+            .padStart(2, "0")}`
+      );
+    };
+
+    updateCountdown();
+
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
   const fetchPair = async () => {
     try {
       const res = await axios.get(
@@ -95,35 +125,18 @@ function PairDashboard({ mission, mongoUser }) {
       socket.off("new-checkin", handleNewCheckIn);
     };
   }, [mission?.pairId]);
-
   useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
-
-      const diff = midnight - now;
-
-      const hrs = Math.floor(diff / 1000 / 60 / 60);
-      const mins = Math.floor((diff / 1000 / 60) % 60);
-      const secs = Math.floor((diff / 1000) % 60);
-
-      setTimeLeft(
-        `${hrs.toString().padStart(2, "0")}:${mins
-          .toString()
-          .padStart(2, "0")}:${secs
-            .toString()
-            .padStart(2, "0")}`
-      );
+    const handleAbandon = () => {
+      navigate("/missions");
     };
 
-    updateCountdown();
+    socket.on("pair-abandoned", handleAbandon);
 
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
+    return () => {
+      socket.off("pair-abandoned", handleAbandon);
+    };
   }, []);
+
 
   useEffect(() => {
     const handleStreakUpdated = (data) => {
@@ -144,6 +157,17 @@ function PairDashboard({ mission, mongoUser }) {
       );
     };
   }, []);
+  useEffect(() => {
+    const handleMissionCompleted = () => {
+      setShowCompletedModal(true);
+    };
+
+    socket.on("mission-completed", handleMissionCompleted);
+
+    return () => {
+      socket.off("mission-completed", handleMissionCompleted);
+    };
+  }, []);
 
   if (!pair) {
     return (
@@ -160,21 +184,15 @@ function PairDashboard({ mission, mongoUser }) {
 
   const myGoal = isUser1 ? pair.goal1Id : pair.goal2Id;
   const partnerGoal = isUser1 ? pair.goal2Id : pair.goal1Id;
-  const myCheckedIn = isUser1
-    ? pair.todayStatus.user1
-    : pair.todayStatus.user2;
 
-  const partnerCheckedIn = isUser1
-    ? pair.todayStatus.user2
-    : pair.todayStatus.user1;
+  const requiredCheckIns = Math.max(
+    myGoal.targetCheckIns,
+    partnerGoal.targetCheckIns
+  );
 
-  const myFreezeUsed = isUser1
-    ? pair.freezesUsed.user1
-    : pair.freezesUsed.user2;
+  const progress =
+    (pair.streakCount / requiredCheckIns) * 100;
 
-  const partnerFreezeUsed = isUser1
-    ? pair.freezesUsed.user2
-    : pair.freezesUsed.user1;
   return (
     <div className="min-h-screen bg-base-100 overflow-hidden">
       {/* Background */}
@@ -458,6 +476,41 @@ function PairDashboard({ mission, mongoUser }) {
               </div>
 
             </div>
+            <div className="divider"></div>
+
+            <p className="text-xs uppercase tracking-[0.25em] opacity-50">
+              SHARED CHALLENGE
+            </p>
+
+            <div className="mt-5">
+
+              <div className="flex justify-between items-center">
+
+                <div>
+
+                  <p className="text-3xl font-black">
+                    {pair.streakCount} / {requiredCheckIns}
+                  </p>
+
+                  <p className="text-sm opacity-60 mt-1">
+                    Shared days completed
+                  </p>
+
+                </div>
+
+                <div className="badge badge-warning badge-outline">
+                  {requiredCheckIns - pair.streakCount} days left
+                </div>
+
+              </div>
+
+              <progress
+                className="progress progress-warning w-full mt-5"
+                value={progress}
+                max="100"
+              />
+
+            </div>
           </div>
 
           {/* COUNTDOWN */}
@@ -480,53 +533,95 @@ function PairDashboard({ mission, mongoUser }) {
 
             <div className="divider"></div>
 
-            {todayStatus.me && todayStatus.partner ? (
-              <div className="flex items-center justify-between">
+            <div className="grid grid-cols-2 gap-10 ml-10">
 
-                <div>
-                  <p className="font-semibold text-success">
-                    ✓ Shared streak secured
-                  </p>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] opacity-50">
+                  Current Streak
+                </p>
 
-                  <p className="text-sm opacity-60 mt-1">
-                    Come back after midnight for your next report.
-                  </p>
-                </div>
-
-                <div className="badge badge-success badge-outline">
-                  COMPLETE
-                </div>
-
+                <p className="text-3xl font-black mt-2">
+                  {pair.streakCount}
+                </p>
               </div>
-            ) : (
-              <div className="text-sm opacity-60">
-                Both partners must report progress before midnight.
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] opacity-50">
+                  Remaining
+                </p>
+
+                <p className="text-3xl font-black mt-2">
+                  {requiredCheckIns - pair.streakCount}
+                </p>
               </div>
-            )}
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] opacity-50">
+                  Longest
+                </p>
+
+                <p className="text-xl font-semibold mt-2">
+                  {pair.longestStreak} days
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] opacity-50">
+                  Status
+                </p>
+
+                <div className="mt-2">
+                  {todayStatus.me && todayStatus.partner ? (
+                    <span className="badge badge-success badge-outline">
+                      On Track
+                    </span>
+                  ) : (
+                    <span className="badge badge-warning badge-outline">
+                      Waiting
+                    </span>
+                  )}
+                </div>
+              </div>
+
+            </div>
           </div>
         </section>
 
-        {/* WARNING */}
-        <section className="rounded-[24px] border border-warning/20 bg-warning/5 p-6">
-          <p className="text-warning font-semibold">
-            Streak Protection Active
-          </p>
+        {/* MISSION ACTIONS */}
+        <section className="rounded-[24px] border border-error/20 bg-base-200/40 backdrop-blur-xl p-8">
 
-          <p className="mt-2 text-base-content/60">
-            Each partner receives one freeze every month. If a daily report is
-            missed, the freeze is consumed automatically and the shared streak
-            survives.
-          </p>
+          <div className="flex items-center justify-between">
 
-          <div className="mt-4 flex gap-3">
-            <div className="badge badge-outline">
-              YOUR FREEZE: {1 - myFreezeUsed}
+            <div>
+
+              <div className="badge badge-outline mb-3">
+                MISSION ACTIONS
+              </div>
+
+              <h2 className="text-2xl font-bold">
+                Leave Partnership
+              </h2>
+
+              <p className="mt-2 text-base-content/60 max-w-lg">
+                Leaving ends the shared challenge immediately.
+                Both missions will be abandoned and the shared streak will end.
+              </p>
+
             </div>
 
-            <div className="badge badge-outline">
-              PARTNER FREEZE: {1 - partnerFreezeUsed}
-            </div>
+            <button
+              className="btn btn-error btn-outline"
+              onClick={() =>
+                document
+                  .getElementById("abandon_pair_modal")
+                  ?.showModal()
+              }
+            >
+              Leave Partnership
+            </button>
+
           </div>
+
         </section>
 
         {/* REPORT SECTION */}
@@ -543,7 +638,21 @@ function PairDashboard({ mission, mongoUser }) {
             </p>
           </div>
 
-          <CheckInForm pairId={pair._id} />
+          {todayStatus.me ? (
+            <div className="rounded-2xl border border-success/20 bg-success/10 p-10 text-center">
+
+              <h2 className="text-2xl font-bold">
+                Today's report submitted.
+              </h2>
+
+              <p className="mt-3 opacity-60">
+                Nice work. Come back after midnight to submit tomorrow's report.
+              </p>
+
+            </div>
+          ) : (
+            <CheckInForm pairId={pair._id} />
+          )}
         </section>
 
         {/* ACTIVITY LOG */}
@@ -563,6 +672,88 @@ function PairDashboard({ mission, mongoUser }) {
           <CheckInFeed pairId={pair._id} />
         </section>
       </div>
+      <dialog id="abandon_pair_modal" className="modal">
+        <div className="modal-box">
+
+          <h3 className="font-bold text-2xl">
+            Leave Partnership?
+          </h3>
+
+          <p className="py-5 text-base-content/70">
+            This will immediately abandon the partnership for both users.
+            The shared streak will end and both missions will be marked as abandoned.
+          </p>
+
+          <div className="modal-action">
+
+            <form method="dialog">
+              <button className="btn">
+                Cancel
+              </button>
+            </form>
+
+            <button
+              className="btn btn-error"
+              onClick={async () => {
+                try {
+                  await axios.patch(
+                    `http://localhost:5000/api/pairs/${pair._id}/abandon`
+                  );
+                } catch (error) {
+                  console.log(error);
+                }
+              }}
+            >
+              Leave Partnership
+            </button>
+
+          </div>
+
+        </div>
+      </dialog>
+      {showCompletedModal && (
+  <dialog className="modal modal-open">
+    <div className="modal-box text-center">
+
+      <h2 className="text-3xl font-black">
+        🎉 Mission Complete
+      </h2>
+
+      <p className="mt-5 text-base-content/70">
+        You and your partner successfully completed
+        your shared accountability challenge.
+      </p>
+
+      <div className="divider"></div>
+
+      <div className="space-y-3">
+
+        <div className="flex justify-between">
+          <span>Shared Days</span>
+          <span className="font-bold">
+            {pair.streakCount}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Longest Streak</span>
+          <span className="font-bold">
+            {pair.longestStreak}
+          </span>
+        </div>
+
+      </div>
+
+      <button
+        className="btn btn-warning w-full mt-8"
+        onClick={() => navigate("/history")}
+      >
+        View History
+      </button>
+
+    </div>
+  </dialog>
+)}
     </div>
   );
 }

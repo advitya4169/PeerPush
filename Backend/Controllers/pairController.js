@@ -1,7 +1,8 @@
 import Pair from "../Models/Pair.js";
 import CheckIn from "../Models/CheckIn.js";
 import User from "../Models/User.js";
-
+import Goal from "../Models/Goal.js";
+import { getIO } from "../socket.js";
 export const getPairById = async (req, res) => {
   try {
     const { pairId } = req.params;
@@ -51,6 +52,7 @@ export const getPairById = async (req, res) => {
 };
 
 export const validatePairStreak = async (req, res) => {
+  console.log("validatePairStreak called");
   try {
     const { pairId } = req.params;
 
@@ -109,6 +111,17 @@ export const validatePairStreak = async (req, res) => {
 
       await pair.save();
 
+// Sync streak to both goals
+      await Goal.findByIdAndUpdate(pair.goal1Id, {
+        currentStreak: pair.streakCount,
+        longestStreak: pair.longestStreak,
+      });
+
+      await Goal.findByIdAndUpdate(pair.goal2Id, {
+        currentStreak: pair.streakCount,
+        longestStreak: pair.longestStreak,
+      });
+
       return res.status(200).json({
         success: true,
         message: "Streak increased successfully",
@@ -121,6 +134,15 @@ export const validatePairStreak = async (req, res) => {
     pair.streakCount = 0;
 
     await pair.save();
+
+// Sync current streak to both goals
+    await Goal.findByIdAndUpdate(pair.goal1Id, {
+      currentStreak: 0,
+    });
+
+    await Goal.findByIdAndUpdate(pair.goal2Id, {
+      currentStreak: 0,
+    });   
 
     return res.status(200).json({
       success: false,
@@ -173,6 +195,44 @@ export const getTodayStatus = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       message: err.message,
+    });
+  }
+};
+
+export const abandonPair = async (req, res) => {
+  try {
+    const { pairId } = req.params;
+
+    const pair = await Pair.findById(pairId);
+
+    if (!pair) {
+      return res.status(404).json({
+        message: "Pair not found",
+      });
+    }
+
+    pair.status = "ended";
+    await pair.save();
+    const io = getIO();
+
+    io.to(pairId).emit("pair-abandoned");
+    await Goal.findByIdAndUpdate(pair.goal1Id, {
+      status: "abandoned",
+      pairId: null,
+    });
+
+    await Goal.findByIdAndUpdate(pair.goal2Id, {
+      status: "abandoned",
+      pairId: null,
+    });
+
+    res.status(200).json({
+      message: "Partnership abandoned successfully.",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
     });
   }
 };

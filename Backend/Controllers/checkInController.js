@@ -2,6 +2,7 @@ import CheckIn from "../Models/CheckIn.js";
 import Pair from "../Models/Pair.js";
 import User from "../Models/User.js";
 import { getIO } from "../socket.js";
+import Goal from "../Models/Goal.js";
 
 export const createCheckIn = async (req, res) => {
   try {
@@ -68,21 +69,58 @@ export const createCheckIn = async (req, res) => {
       if (!alreadyValidated) {
         pair.streakCount += 1;
 
-        pair.longestStreak = Math.max(
-          pair.longestStreak,
-          pair.streakCount
-        );
+pair.longestStreak = Math.max(
+  pair.longestStreak,
+  pair.streakCount
+);
 
-        pair.lastBothCheckedIn =
-          new Date();
+pair.lastBothCheckedIn = new Date();
 
-        await pair.save();
+const goal1 = await Goal.findById(pair.goal1Id);
+const goal2 = await Goal.findById(pair.goal2Id);
+
+// Keep goal streaks synced
+goal1.currentStreak = pair.streakCount;
+goal2.currentStreak = pair.streakCount;
+
+goal1.longestStreak = pair.longestStreak;
+goal2.longestStreak = pair.longestStreak;
+
+// Finish partnership if challenge completed
+const requiredCheckIns = Math.max(
+  goal1.targetCheckIns,
+  goal2.targetCheckIns
+);
+
+if (pair.streakCount >= requiredCheckIns) {
+  pair.status = "ended";
+
+  goal1.status = "completed";
+  goal2.status = "completed";
+}
+
+await pair.save();
+await goal1.save();
+await goal2.save();
+
+// Sync streak to both missions
+        await Goal.findByIdAndUpdate(pair.goal1Id, {
+          currentStreak: pair.streakCount,
+          longestStreak: pair.longestStreak,
+        });
+
+        await Goal.findByIdAndUpdate(pair.goal2Id, {
+          currentStreak: pair.streakCount,
+          longestStreak: pair.longestStreak,
+        });
         io.to(pairId).emit("streak-updated", {
         streakCount: pair.streakCount,
         longestStreak: pair.longestStreak,
         lastBothCheckedIn: pair.lastBothCheckedIn,
       });
-
+        if (pair.status === "ended") {
+          io.to(pairId).emit("mission-completed");
+        }
         console.log(
           `Streak increased to ${pair.streakCount}`
         );
