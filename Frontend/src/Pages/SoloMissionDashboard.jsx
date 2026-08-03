@@ -5,12 +5,12 @@ import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { useEffect } from "react";
 import { uploadImage } from "../Utils/uploadImage.js";
-import MissionHeader from "./MissionHeader.jsx";
-import MissionStats from "./MissionStats.jsx";
-import MissionProgress from "./MissionProgress.jsx";
-import MissionActivity from "./MissionActivity.jsx";
-import MissionStatistics from "./MissionStatistics.jsx";
-import MissionCheckIn from "./MissionCheckIn.jsx";
+import MissionHeader from "../Components/MissionHeader.jsx";
+import MissionStats from "../Components/MissionStats.jsx";
+import MissionProgress from "../Components/MissionProgress.jsx";
+import MissionActivity from "../Components/MissionActivity.jsx";
+import MissionStatistics from "../Components/MissionStatistics.jsx";
+import MissionCheckIn from "../Components/MissionCheckIn.jsx";
 function SoloMissionDashboard({ mission: initialMission }) {
     const [missionCompleted, setMissionCompleted] = useState(false);
     const [image, setImage] = useState(null);

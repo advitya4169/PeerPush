@@ -278,15 +278,30 @@ export const cancelMatchmaking = async (req, res) => {
       });
     }
 
-    goal.mode = "solo";
-    goal.status = "active";
+    // Existing solo mission -> restore it
+    if (
+      goal.lastCheckInDate ||
+      goal.completedCheckIns > 0 ||
+      goal.currentStreak > 0
+    ) {
+      goal.mode = "solo";
+      goal.status = "active";
 
-    await goal.save();
+      await goal.save();
 
-    res.status(200).json({
-      message: "Matchmaking cancelled",
-      goal,
+      return res.status(200).json({
+        message: "Returned to solo mission.",
+        goal,
+      });
+    }
+
+    // Fresh partner mission -> delete it
+    await Goal.findByIdAndDelete(goalId);
+
+    return res.status(200).json({
+      message: "Matchmaking cancelled and mission deleted.",
     });
+
   } catch (error) {
     res.status(500).json({
       message: error.message,

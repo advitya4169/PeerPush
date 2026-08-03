@@ -1,38 +1,39 @@
-import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
-import CreateGoal from "../Components/CreateGoal";
-import GoalList from "../Components/GoalList";
-import PairDashboard from "../Components/PairDashboard";
-import Navbar from "../Components/Navbar";
-import { useNavigate } from "react-router-dom";
 import {
-  Target,
-  Handshake,
   ClipboardCheck,
   Flame,
-  Radar,
+  Handshake,
   ShieldAlert,
-  User,
   Swords,
+  Target,
+  User
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../Components/Navbar";
 
 function Dashboard() {
+  // State variables for goal count, goal list, and user data
   const [goalCount, setGoalCount] = useState(0);
   const [goals, setGoals] = useState([]);
   const { user } = useUser();
   const navigate = useNavigate();
   const [mongoUser, setMongoUser] = useState(null);
 
+  // Fetch backend user data and goal list once the Clerk user is authenticated
   useEffect(() => {
     if (!user) return;
 
     const fetchUser = async () => {
       try {
+        // Fetch MongoDB user document using Clerk user ID
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/users/me/${user.id}`
         );
         setMongoUser(res.data);
+        
+        // Fetch all goals associated with the current user
         const goalsRes = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/goals/my/${user.id}`
         );
@@ -46,7 +47,9 @@ function Dashboard() {
 
     fetchUser();
   }, [user]);
+  
 
+  // Show a loading spinner while waiting for MongoDB user data to resolve
   if (!mongoUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base-100">
@@ -55,7 +58,7 @@ function Dashboard() {
     );
   }
 
-
+  // Static steps configuration for "The Pact" guide section
   const steps = [
     {
       number: "01",
@@ -82,6 +85,8 @@ function Dashboard() {
       desc: "Miss once and both lose the streak.",
     },
   ];
+
+  // Filter goals into solo vs partner categories
   const soloGoals = goals.filter(
     (goal) => goal.mode === "solo"
   );
@@ -89,6 +94,8 @@ function Dashboard() {
   const partnerGoals = goals.filter(
     (goal) => goal.mode === "partner"
   );
+  
+  // Filter partner goals by status (searching for match vs already paired)
   const searchingGoals = partnerGoals.filter(
     (goal) => goal.status === "searching"
   );
@@ -97,6 +104,7 @@ function Dashboard() {
     (goal) => goal.pairId
   );
 
+  // Dynamically determine the dashboard status text and corresponding text color theme
   let dashboardStatus = "No Active Mission";
   let statusColor = "text-base-content/50";
 
@@ -116,10 +124,11 @@ function Dashboard() {
     dashboardStatus = "Solo Focus";
     statusColor = "text-primary";
   }
+
   return (
     <div className="min-h-screen bg-base-100 text-base-content overflow-hidden">
       <Navbar />
-      {/* Background */}
+      {/* Background Decorative Glow Effects & Grid Pattern */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-warning/10 blur-[140px]" />
 
@@ -129,7 +138,7 @@ function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* Hero */}
+        {/* Hero Section: Overview and Quick Stats */}
         <section className="relative overflow-hidden rounded-[32px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-8 md:p-10 mb-8">
           <div className="absolute -top-16 right-0 h-72 w-72 rounded-full bg-warning/10 blur-[120px]" />
 
@@ -139,7 +148,7 @@ function Dashboard() {
             </div>
 
             <div className="grid lg:grid-cols-2 gap-10 items-center">
-              {/* Left */}
+              {/* Left Column: Heading and Call-to-Action button */}
               <div>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight">
                   Build streaks that survive bad days.
@@ -155,7 +164,7 @@ function Dashboard() {
                   {goalCount === 0 ? (
                     <button
                       onClick={() => navigate("/missions")}
-                      className="btn btn-warning btn-lg"
+                      className="btn btn-warning btn-lg outline-none"
                     >
                       Create Your First Mission
                     </button>
@@ -174,7 +183,7 @@ function Dashboard() {
 
               </div>
 
-              {/* Right */}
+              {/* Right Column: Key metrics grid layout */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-3xl border border-base-300 bg-base-300/20 p-6">
                   <p className="text-xs uppercase tracking-[0.25em] opacity-50">
@@ -222,9 +231,9 @@ function Dashboard() {
 
 
 
-        {/* Main Grid */}
+        {/* Main Grid: Operator Profile & Partner Mode breakdown */}
         <div className="grid lg:grid-cols-3 gap-6 mb-10">
-          {/* Operator Card */}
+          {/* Operator Profile Card */}
           <div className="rounded-[28px] border border-base-300 bg-base-200/50 backdrop-blur-xl p-6">
             <div className="flex items-center justify-between">
               <p className="text-xs tracking-[0.3em] opacity-50">
@@ -236,7 +245,7 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-4">
+            <div className="mt-10 flex items-center gap-4">
               <div className="avatar">
                 <div className="w-16 rounded-2xl ring ring-primary/20">
                   <img
@@ -257,10 +266,10 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="divider"></div>
+            <div className="divider mt-6"/>
 
-            <div className="mt-6 rounded-2xl border border-warning/10 bg-base-300/20 p-4">
-              <p className="text-warning text-sm font-medium">
+            <div className="mt-12 rounded-2xl border border-warning/10 bg-base-300/20 p-5">
+              <p className="text-warning text-lg font-medium">
                 Ready For Matchmaking
               </p>
 
@@ -270,7 +279,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Future Pact Card */}
+          {/* Partner Mode Feature Card */}
           <div className="lg:col-span-2 relative overflow-hidden rounded-[28px] border border-warning/20 bg-base-200/50 backdrop-blur-xl p-8">
             <div className="absolute top-0 right-0 h-40 w-40 bg-warning/10 blur-3xl" />
 
@@ -332,7 +341,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Pact Flow */}
+        {/* The Pact Flow Guide Section */}
         <section className="rounded-[28px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8 mb-10">
           <div className="flex items-center gap-3 mb-8">
             <Swords className="w-6 h-6 text-warning" strokeWidth={2} />
@@ -346,7 +355,7 @@ function Dashboard() {
             {steps.map((step) => (
               <div
                 key={step.number}
-                className="group rounded-3xl border border-base-300 bg-base-300/20 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-warning/30"
+                className="group rounded-3xl border border-base-300 bg-base-300/20 p-6 transition-all duration-300 hover:-translate-y-2 hover:border-warning/30"
               >
                 <div>
                   <step.icon

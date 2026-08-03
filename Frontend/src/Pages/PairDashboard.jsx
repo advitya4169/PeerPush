@@ -1,8 +1,8 @@
 import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import CheckInForm from "./CheckInForm";
-import CheckInFeed from "./CheckInFeed";
+import CheckInForm from "../Components/CheckInForm";
+import CheckInFeed from "../Components/CheckInFeed";
 import socket from "../socket";
 import { useNavigate } from "react-router-dom";
 function PairDashboard({ mission, mongoUser }) {

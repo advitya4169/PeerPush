@@ -6,16 +6,7 @@ export const createGoal = async(req,res)=>{
         const { clerkId, category, title, description, dailyTarget,targetCheckIns,mode } = req.body;
         const user = await User.findOne({clerkId});
         if(!user) return res.status(404).json({message:"User not found"});
-        const goal = await Goal.create({
-          userId: user._id,
-          category,
-          title,
-          description,
-          dailyTarget,
-          targetCheckIns,
-          mode,
-          status: "active",
-        });
+        const goal = await Goal.create({userId: user._id,category,title,description,dailyTarget,targetCheckIns,mode,status: "active"});
         res.status(201).json(goal);
     }
     catch(error){

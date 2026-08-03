@@ -10,17 +10,20 @@ import Dashboard from "./Pages/Dashboard";
 import pfp1 from "../src/assets/pfp1.png";
 import pfp2 from "../src/assets/pfp2.png";
 import { Routes, Route } from "react-router-dom";
-import SoloPage from "./Pages/SoloPage";
-import PartnerPage from "./Pages/PartnerPage";
 import Missions from "./Pages/Missions";
 import MissionPage from "./Pages/MissionPage";
 import HistoryPage from "./Pages/HistoryPage";
+
 function App() {
+  // Extract user authentication state and loading status from Clerk
   const { user, isLoaded } = useUser();
 
+  // Sync user data to the backend database whenever user state changes
   useEffect(() => {
+    // Exit early if user data hasn't finished loading or user is not signed in
     if (!isLoaded || !user) return;
 
+    // Send a POST request to sync Clerk user details with the backend API
     axios.post(`${import.meta.env.VITE_API_URL}/api/users/sync`, {
       clerkId: user.id,
       username: user.fullName,
@@ -32,9 +35,10 @@ function App() {
 
   return (
     <>
+      {/* Content displayed when the user is NOT signed in (Landing Page) */}
       <SignedOut>
         <div className="min-h-screen bg-base-100 relative overflow-hidden">
-          {/* Background */}
+          {/* Background decorative gradients and grid pattern */}
           <div className="absolute inset-0">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[700px] w-[700px] rounded-full bg-warning/10 blur-[180px]" />
 
@@ -44,7 +48,7 @@ function App() {
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6">
-            {/* Navbar */}
+            {/* Navigation bar with logo and sign-in button */}
             <nav className="h-20 flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-black tracking-tight">
@@ -63,10 +67,10 @@ function App() {
               </SignInButton>
             </nav>
 
-            {/* Hero */}
+            {/* Hero section explaining the value proposition */}
             <section className="min-h-[80vh] flex items-center">
               <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
-                {/* Left */}
+                {/* Left column: Main headline and call to action */}
                 <div>
                   <div className="badge badge-warning badge-outline mb-6">
                     ACCOUNTABILITY REIMAGINED
@@ -95,7 +99,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Right */}
+                {/* Right column: Visual card demonstrating shared streaks */}
                 <div>
                   <div className="rounded-[36px] border border-base-300 bg-base-200/40 backdrop-blur-xl p-8">
 
@@ -122,7 +126,7 @@ function App() {
 
                     <div className="flex items-center justify-center gap-10">
 
-                      {/* User */}
+                      {/* Current User Status */}
                       <div className="text-center">
                         <div className="avatar placeholder">
                           <div className="w-20 rounded-3xl bg-base-300 text-base-content">
@@ -139,7 +143,7 @@ function App() {
                         </div>
                       </div>
 
-                      {/* Connection */}
+                      {/* Streak Connection Line & Counter */}
                       <div className="flex flex-col items-center">
                         <div className="w-24 h-px bg-gradient-to-r from-warning to-primary" />
 
@@ -152,7 +156,7 @@ function App() {
                         </div>
                       </div>
 
-                      {/* Partner */}
+                      {/* Partner Status */}
                       <div className="text-center">
                         <div className="avatar placeholder">
                           <div className="w-20 rounded-3xl bg-base-300 text-base-content">
@@ -182,7 +186,7 @@ function App() {
               </div>
             </section>
 
-            {/* Features */}
+            {/* Features section highlighting core functionality */}
             <section className="pb-24">
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="rounded-[28px] border border-base-300 bg-base-200/40 p-6">
@@ -226,6 +230,7 @@ function App() {
         </div>
       </SignedOut>
 
+      {/* Content displayed when the user IS signed in (Authenticated App Router) */}
       <SignedIn>
         <Routes>
           <Route path="/" element={<Dashboard />} />

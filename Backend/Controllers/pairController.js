@@ -1,7 +1,6 @@
-import Pair from "../Models/Pair.js";
 import CheckIn from "../Models/CheckIn.js";
-import User from "../Models/User.js";
 import Goal from "../Models/Goal.js";
+import Pair from "../Models/Pair.js";
 import { getIO } from "../socket.js";
 export const getPairById = async (req, res) => {
   try {
@@ -52,7 +51,6 @@ export const getPairById = async (req, res) => {
 };
 
 export const validatePairStreak = async (req, res) => {
-  console.log("validatePairStreak called");
   try {
     const { pairId } = req.params;
 

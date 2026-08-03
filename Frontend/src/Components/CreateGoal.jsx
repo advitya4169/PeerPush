@@ -12,19 +12,25 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
+
 function CreateGoal({ goals, setGoals, setGoalCount }) {
   const navigate = useNavigate();
+  const { user } = useUser();
+
+  // Form State Management
   const [mode, setMode] = useState("solo");
   const [targetCheckIns, setTargetCheckIns] = useState(30);
-  const { user } = useUser();
   const [category, setCategory] = useState("Coding");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dailyTarget, setDailyTarget] = useState("");
+
+  // Handle form submission to create a new goal
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Send mission creation request to the API
       const goalRes = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/goals`,
         {
@@ -38,14 +44,18 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
         }
       );
 
+      // Update parent component state with newly created goal
       setGoals((prev) => [goalRes.data, ...prev]);
       setGoalCount((prev) => prev + 1);
 
+      // Reset form input fields
       setTitle("");
       setDescription("");
       setDailyTarget("");
 
+      // Logic branch based on selected mission mode
       if (mode === "partner") {
+        // Enqueue user in the matchmaking system for partner goals
         await axios.post(
           `${import.meta.env.VITE_API_URL}/api/matchmaking/join`,
           {
@@ -54,16 +64,18 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
           }
         );
 
+        // Redirect user directly to the new mission page
         navigate(`/missions/${goalRes.data._id}`);
       } else {
+        // Show success modal for solo goals
         document.getElementById("goal_success_modal")?.showModal();
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.log(error);
     }
   };
 
+  // Predefined category choices with Lucide icons
   const categories = [
     { name: "Coding", icon: Code2 },
     { name: "Fitness", icon: Dumbbell },
@@ -75,8 +87,9 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
 
   return (
     <>
+      {/* Goal Creation Card */}
       <div className="relative overflow-hidden rounded-[32px] border border-warning/20 bg-base-200/40 backdrop-blur-xl p-8">
-        {/* Glow */}
+        {/* Decorative Glow */}
         <div className="absolute top-0 right-0 h-72 w-72 bg-warning/10 blur-[120px]" />
 
         <div className="relative z-10">
@@ -94,7 +107,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-8">
-            {/* Categories */}
+            {/* Category Selector Grid */}
             <div>
               <p className="text-sm uppercase tracking-wider text-base-content/50 mb-4">
                 Choose Mission Type
@@ -123,7 +136,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
               </div>
             </div>
 
-            {/* Mission Title */}
+            {/* Mission Title Input */}
             <div>
               <label className="label">
                 <span className="label-text text-base-content/70">
@@ -141,7 +154,7 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
               />
             </div>
 
-            {/* Description */}
+            {/* Mission Brief Description */}
             <div>
               <label className="label">
                 <span className="label-text text-base-content/70">
@@ -158,6 +171,8 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                 required
               />
             </div>
+
+            {/* Daily Target Specification */}
             <div>
               <label className="label">
                 <span className="label-text text-base-content/70">
@@ -172,6 +187,8 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                 onChange={(e) => setDailyTarget(e.target.value)}
               />
             </div>
+
+            {/* Target Check-ins Counter */}
             <div>
               <label className="label">
                 <span className="label-text font-medium">
@@ -189,6 +206,8 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                 }
               />
             </div>
+
+            {/* Mode Selection (Solo vs Partner Matchmaking) */}
             <div>
               <label className="label">
                 <span className="label-text font-medium">
@@ -197,7 +216,6 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
               </label>
 
               <div className="grid grid-cols-2 gap-2 mt-4">
-
                 <button
                   type="button"
                   onClick={() => setMode("solo")}
@@ -219,8 +237,8 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                   type="button"
                   onClick={() => setMode("partner")}
                   className={`rounded-3xl border p-5 text-left transition-all ${mode === "partner"
-                    ? "border-warning bg-warning/10"
-                    : "border-base-300"
+                    ? "border-warning bg-warning/10"  
+                    : "border-base-300" 
                     }`}
                 >
                   <h3 className="font-bold text-lg">
@@ -231,10 +249,10 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
                     We'll match you with someone pursuing a similar mission.
                   </p>
                 </button>
-
               </div>
             </div>
-            {/* Footer */}
+
+            {/* Form Footer Action */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
               <div className="text-sm text-base-content/50">
                 Your mission becomes the foundation of your future streak.
@@ -252,58 +270,52 @@ function CreateGoal({ goals, setGoals, setGoalCount }) {
         </div>
       </div>
 
-      {/* Success Modal */}
-      {/* Success Modal */}
-<dialog id="goal_success_modal" className="modal">
-  <div className="modal-box rounded-[28px] border border-success/20 bg-base-200">
+      {/* Solo Goal Success Modal */}
+      <dialog id="goal_success_modal" className="modal">
+        <div className="modal-box rounded-[28px] border border-success/20 bg-base-200">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-7 h-7 text-success" />
 
-    <div className="flex items-center gap-3">
-      <CheckCircle2 className="w-7 h-7 text-success" />
+            <h3 className="text-2xl font-black">
+              Mission Created
+            </h3>
+          </div>
 
-      <h3 className="text-2xl font-black">
-        Mission Created
-      </h3>
-    </div>
+          <p className="mt-5 text-base-content/70 leading-relaxed">
+            Your solo mission is ready. Stay consistent, submit your daily check-ins,
+            and build your streak one day at a time.
+          </p>
 
-    <p className="mt-5 text-base-content/70 leading-relaxed">
-      Your solo mission is ready. Stay consistent, submit your daily check-ins,
-      and build your streak one day at a time.
-    </p>
+          <div className="mt-6 rounded-2xl border border-success/20 bg-success/5 p-4">
+            <p className="font-medium text-success">
+              You're all set.
+            </p>
 
-    <div className="mt-6 rounded-2xl border border-success/20 bg-success/5 p-4">
-      <p className="font-medium text-success">
-        You're all set.
-      </p>
+            <p className="text-sm text-base-content/60 mt-2">
+              Head to your mission dashboard to complete your first daily check-in.
+            </p>
+          </div>
 
-      <p className="text-sm text-base-content/60 mt-2">
-        Head to your mission dashboard to complete your first daily check-in.
-      </p>
-    </div>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-outline">
+                Stay Here
+              </button>
+            </form>
 
-    <div className="modal-action">
-
-      <form method="dialog">
-        <button
-          className="btn btn-outline"
-        >
-          Stay Here
-        </button>
-      </form>
-
-      <button
-        className="btn btn-warning"
-        onClick={() => {
-          document.getElementById("goal_success_modal")?.close();
-          navigate(`/missions/${goals[0]._id}`);
-        }}
-      >
-        Go to Mission
-      </button>
-
-    </div>
-
-  </div>
-</dialog>
+            {/* Navigate directly to the newly created goal detail page */}
+            <button
+              className="btn btn-warning"
+              onClick={() => {
+                document.getElementById("goal_success_modal")?.close();
+                navigate(`/missions/${goals[0]._id}`);
+              }}
+            >
+              Go to Mission
+            </button>
+          </div>
+        </div>
+      </dialog>
     </>
   );
 }

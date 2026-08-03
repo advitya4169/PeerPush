@@ -12,10 +12,15 @@ import {
   Search,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 function GoalList({ goals }) {
+  // Clerk hook to get current authenticated user info
   const { user } = useUser();
+  // State to track which goal is currently submitting to join the queue
   const [joiningGoal, setJoiningGoal] = useState(null);
   const navigate = useNavigate();
+
+  // Check if the user already has an active goal with an assigned partner
   const activePartnerGoal = goals.find(
     (goal) =>
       goal.mode === "partner" &&
@@ -23,11 +28,15 @@ function GoalList({ goals }) {
       goal.pairId
   );
 
+  // Boolean flag used to disable/prevent multiple active partnerships
   const hasActivePartnership = !!activePartnerGoal;
+
+  // Handler to place a goal into the matchmaking queue
   const joinQueue = async (goalId) => {
     try {
       setJoiningGoal(goalId);
 
+      // Call API endpoint to join the matchmaking queue
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/matchmaking/join`,
         {
@@ -36,15 +45,18 @@ function GoalList({ goals }) {
         }
       );
 
+      // Navigate to the goal details page upon successful queue joining
       navigate(`/missions/${goalId}`);
 
     } catch (error) {
       console.log(error);
     } finally {
+      // Reset loading state
       setJoiningGoal(null);
     }
   };
 
+  // Helper function to render matching Lucide icon based on category name
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Coding":
@@ -70,6 +82,7 @@ function GoalList({ goals }) {
   return (
     <>
       <section className="space-y-6">
+        {/* Section Header */}
         <div>
           <div className="badge badge-outline mb-3">
             YOUR MISSIONS
@@ -84,6 +97,7 @@ function GoalList({ goals }) {
           </p>
         </div>
 
+        {/* Empty State: Prompt user to create a goal if none exist */}
         {goals.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-base-300 bg-base-200/30 p-12 text-center">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-warning/20 bg-warning/10">
@@ -99,6 +113,7 @@ function GoalList({ goals }) {
             </p>
           </div>
         ) : (
+          /* Grid list of user goals */
           <div className="grid lg:grid-cols-2 gap-6">
             {goals.map((goal) => (
               <div
@@ -106,10 +121,11 @@ function GoalList({ goals }) {
                 onClick={() => navigate(`/missions/${goal._id}`)}
                 className="group cursor-pointer relative overflow-hidden rounded-[28px] border border-base-300 bg-base-200/50 backdrop-blur-xl transition-all duration-300 hover:border-warning/30 hover:-translate-y-1"
               >
-                {/* glow */}
+                {/* Background glow on hover */}
                 <div className="absolute top-0 right-0 h-40 w-40 bg-warning/5 opacity-0 blur-3xl transition-all duration-300 group-hover:opacity-100" />
 
                 <div className="relative p-6">
+                  {/* Goal Header: Category Icon, Title, and Status Badge */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-14 h-14 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center">
@@ -137,12 +153,14 @@ function GoalList({ goals }) {
                     </div>
                   </div>
 
+                  {/* Goal Description */}
                   <p className="mt-5 text-base-content/70 leading-relaxed">
                     {goal.description}
                   </p>
 
                   <div className="divider my-6"></div>
 
+                  {/* Goal Actions & Matchmaking Status */}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-wider text-base-content/40">
@@ -158,7 +176,9 @@ function GoalList({ goals }) {
                       </p>
                     </div>
 
+                    {/* Action Button Conditional Rendering */}
                     {goal.pairId ? (
+                      /* Option 1: Open existing active partnership */
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -169,6 +189,7 @@ function GoalList({ goals }) {
                         Open Partnership
                       </button>
                     ) : hasActivePartnership ? (
+                      /* Option 2: Disabled when another partnership is already active */
                       <button
                         disabled
                         className="btn btn-disabled"
@@ -176,6 +197,7 @@ function GoalList({ goals }) {
                         Partnership Active
                       </button>
                     ) : (
+                      /* Option 3: Find a partner by joining the queue */
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -205,37 +227,6 @@ function GoalList({ goals }) {
         )}
       </section>
 
-      <dialog id="queue_modal" className="modal">
-        <div className="modal-box">
-          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-warning/20 bg-warning/10">
-            <ShieldCheck className="h-10 w-10 text-warning" />
-          </div>
-
-          <h3 className="font-bold text-2xl">
-            Matchmaking Activated
-          </h3>
-
-          <p className="py-4 text-base-content/70">
-            Your mission has entered the queue.
-            We're now looking for someone willing to protect a streak alongside
-            you.
-          </p>
-
-          <div className="alert mt-2">
-            <span>
-              The next person you match with can affect your streak.
-            </span>
-          </div>
-
-          <div className="modal-action">
-            <form method="dialog">
-              <button className="btn btn-warning">
-                Let's Go
-              </button>
-            </form>
-          </div>
-        </div>
-      </dialog>
     </>
   );
 }

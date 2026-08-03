@@ -1,6 +1,4 @@
 import User from "../Models/User.js";
-import Goal from "../Models/Goal.js";
-import Pair from "../Models/Pair.js";
 
 export const syncUser = async (req, res) => {
   try {
@@ -9,13 +7,7 @@ export const syncUser = async (req, res) => {
     let user = await User.findOne({ clerkId });
 
     if (!user) {
-      user = await User.create({
-        clerkId,
-        username,
-        email,
-        avatar,
-        timezone,
-      });
+      user = await User.create({clerkId,username,email,avatar,timezone});
     }
 
     res.status(200).json(user);

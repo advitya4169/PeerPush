@@ -11,7 +11,7 @@ export const createCheckIn = async (req, res) => {
 
     const user = await User.findOne({ clerkId });
 
-    if (!user) {
+    if (!user) {  
       return res.status(404).json({
         message: "User not found",
       });
@@ -94,7 +94,6 @@ const requiredCheckIns = Math.max(
 
 if (pair.streakCount >= requiredCheckIns) {
   pair.status = "ended";
-
   goal1.status = "completed";
   goal2.status = "completed";
 }
@@ -126,10 +125,6 @@ await goal2.save();
         );
       }
     }
-
-    // ==========================
-    // SOCKET.IO
-    // ==========================
 
     const populatedCheckIn =
       await CheckIn.findById(

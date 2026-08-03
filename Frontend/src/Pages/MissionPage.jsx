@@ -4,8 +4,8 @@ import { useUser } from "@clerk/clerk-react";
 import axios from "axios";
 
 import Navbar from "../Components/Navbar";
-import PairDashboard from "../Components/PairDashboard";
-import SoloMissionDashboard from "../Components/SoloMissionDashboard";
+import PairDashboard from "../Pages/PairDashboard";
+import SoloMissionDashboard from "../Pages/SoloMissionDashboard";
 
 function MissionPage() {
   const { id } = useParams();
