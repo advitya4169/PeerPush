@@ -33,27 +33,6 @@ https://peer-push.vercel.app
 - Cloudinary
 - Inngest
 
-
-## Environment Variables
-
-Backend
-
-```env
-MONGO_URI=
-CLERK_SECRET_KEY=
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-INNGEST_SIGNING_KEY=
-```
-
-Frontend
-
-```env
-VITE_API_URL=
-VITE_CLERK_PUBLISHABLE_KEY=
-```
-
 ## Future Improvements
 
 - Notifications
