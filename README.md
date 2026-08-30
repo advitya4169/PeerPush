@@ -2,10 +2,6 @@
 
 A real-time accountability platform where users complete solo or partner missions and maintain shared streaks through daily check-ins.
 
-## Live Demo
-
-https://peer-push.vercel.app
-
 ## Features
 
 - Solo & Partner missions
@@ -40,6 +36,3 @@ https://peer-push.vercel.app
 - Analytics dashboard
 - Mobile support
 
-## Author
-
-Advitya Singh
