@@ -1,38 +1,53 @@
 # PeerPush
 
-A real-time accountability platform where users complete solo or partner missions and maintain shared streaks through daily check-ins.
+A paired accountability platform where users are matched with a partner based on a shared goal and maintain a **shared streak** through daily check-ins and proof of work.
 
 ## Features
 
-- Solo & Partner missions
-- Real-time matchmaking
-- Daily check-ins
-- Shared streaks
-- Mission history
-- Cloudinary proof uploads
-- Inngest scheduled jobs
+* Create solo or partner missions
+* Goal-based partner matchmaking
+* Daily check-ins with proof of work
+* Shared streaks between partners
+* Real-time partner updates
+* Track mission progress and streaks
+* Authentication & user management
 
 ## Tech Stack
 
-### Frontend
-- React
-- Vite
-- Tailwind CSS
-- DaisyUI
+**Frontend:** React, Tailwind CSS, DaisyUI
+
+**Backend:** Node.js, Express.js, MongoDB
+
+**Auth:** Clerk
+
+**Real-time:** Socket.IO
+
+**Background Jobs:** Inngest
+
+## Run Locally
+
+```bash
+git clone https://github.com/advitya4169/peerpush.git
+cd peerpush
+```
 
 ### Backend
-- Node.js
-- Express
-- MongoDB
-- Socket.IO
-- Clerk
-- Cloudinary
-- Inngest
 
-## Future Improvements
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-- Notifications
-- Email reminders
-- Analytics dashboard
-- Mobile support
+### Frontend
+
+Open a **new terminal**:
+
+```bash
+cd peerpush/frontend
+npm install
+npm run dev
+```
+
+Create the required `.env` files with your MongoDB, Clerk, Stream, and Inngest credentials.
 
